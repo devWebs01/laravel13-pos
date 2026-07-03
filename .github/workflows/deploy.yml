@@ -1,0 +1,141 @@
+name: Deploy to InfinityFree
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.4
+          extensions: mbstring, pdo_mysql, gd, intl, zip
+          tools: composer:v2
+
+      - name: Install PHP dependencies
+        run: |
+          composer install --no-dev --optimize-autoloader --no-interaction
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build assets
+        run: |
+          npm ci
+          npm run build
+
+      - name: Prepare deployment structure
+        run: |
+          mkdir -p deploy/htdocs deploy/laravel
+
+          # Move Laravel source (excluding public/) into laravel/
+          rsync -a --exclude='public' --exclude='deploy' --exclude='.git' --exclude='.github' --exclude='.ddev' --exclude='node_modules' --exclude='tests' --exclude='storage/app' --exclude='storage/debugbar' --exclude='storage/logs' --exclude='storage/framework/cache/data' . deploy/laravel/
+
+          # Ensure storage directories exist
+          mkdir -p deploy/laravel/storage/app/public
+          mkdir -p deploy/laravel/storage/framework/cache
+          mkdir -p deploy/laravel/storage/framework/sessions
+          mkdir -p deploy/laravel/storage/framework/views
+          mkdir -p deploy/laravel/storage/logs
+          mkdir -p deploy/laravel/bootstrap/cache
+
+          # Move public/ contents into htdocs/
+          rsync -a public/ deploy/htdocs/
+
+          # Create optimized htdocs/index.php that loads Laravel from ../laravel/
+          cat > deploy/htdocs/index.php << 'INDEXPHP'
+<?php
+
+use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
+
+define('LARAVEL_START', microtime(true));
+
+if (file_exists($maintenance = __DIR__.'/../laravel/storage/framework/maintenance.php')) {
+    require $maintenance;
+}
+
+require __DIR__.'/../laravel/vendor/autoload.php';
+
+$app = require_once __DIR__.'/../laravel/bootstrap/app.php';
+
+$app->handleRequest(Request::capture());
+INDEXPHP
+
+      - name: Create .env for production
+        run: |
+          cat > deploy/laravel/.env << 'ENVFILE'
+APP_NAME="POS-DW"
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://adpwork.page.gd
+
+APP_LOCALE=id
+APP_FALLBACK_LOCALE=id
+APP_FAKER_LOCALE=id_ID
+
+DB_CONNECTION=mysql
+DB_HOST=${{ secrets.DB_HOST }}
+DB_PORT=3306
+DB_DATABASE=${{ secrets.DB_DATABASE }}
+DB_USERNAME=${{ secrets.DB_USERNAME }}
+DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+
+CACHE_DRIVER=file
+QUEUE_CONNECTION=sync
+SESSION_DRIVER=file
+SESSION_LIFETIME=120
+FILESYSTEM_DISK=local
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="noreply@adpwork.page.gd"
+MAIL_FROM_NAME="${APP_NAME}"
+
+APP_KEY=${{ secrets.APP_KEY }}
+
+VITE_APP_NAME="${APP_NAME}"
+ENVFILE
+
+      - name: Generate app key if missing
+        run: |
+          cd deploy/laravel
+          php artisan key:generate --force
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+          php artisan event:cache
+
+      - name: Deploy to InfinityFree via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ftpupload.net
+          username: if0_42168223
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: deploy/
+          server-dir: /home/vol7_7/infinityfree.com/if0_42168223/
+          protocol: ftp
+          port: 21
+          log-level: verbose
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/tests/**
