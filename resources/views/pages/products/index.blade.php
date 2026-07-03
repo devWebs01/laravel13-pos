@@ -127,7 +127,7 @@ $delete = function () {
                     </p>
                 </div>
                 <div class="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
-                    <p class="text-xs font-medium uppercase tracking-wider text-zinc-500">Tanpa Stok</p>
+                    <p class="text-xs font-medium uppercase tracking-wider text-zinc-500">{{ __('Tanpa Stok') }}</p>
                     <p class="mt-1 text-2xl font-semibold text-purple-600 dark:text-purple-400">{{ $this->unlimitedStockProducts }}
                     </p>
                 </div>
@@ -211,7 +211,7 @@ $delete = function () {
                                 <flux:table.cell>
                                     @if($product->is_unlimited_stock)
                                         <flux:badge color="purple" size="sm" inset="top bottom">
-                                            Tanpa Stok
+                                            {{ __('Tanpa Stok') }}
                                         </flux:badge>
                                     @else
                                         @php
@@ -316,7 +316,7 @@ $delete = function () {
                                 <p class="text-xs font-medium uppercase tracking-wider text-zinc-400">{{ __('Stock') }}
                                 </p>
                                 @if($detailProduct->is_unlimited_stock)
-                                    <p class="mt-1.5 text-2xl font-semibold text-purple-600">Tanpa Stok</p>
+                                    <p class="mt-1.5 text-2xl font-semibold text-purple-600">{{ __('Tanpa Stok') }}</p>
                                 @else
                                     <p class="mt-1.5 text-2xl font-semibold">
                                         <span :class="$detailProduct->stock < 5 ? 'text-red-600' : 'text-green-600'">{{ $detailProduct->stock }}</span>

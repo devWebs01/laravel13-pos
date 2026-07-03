@@ -30,7 +30,7 @@ mount(function (Transaction $transaction) {
     foreach ($transaction->items as $item) {
         $this->cart[] = [
             'product_id' => $item->product_id,
-            'name' => $item->product?->name ?? 'Unknown',
+            'name' => $item->product?->name ?? __('Unknown'),
             'unit_price' => (float) $item->unit_price,
             'quantity' => $item->quantity,
             'subtotal' => (float) $item->subtotal,
@@ -229,7 +229,7 @@ $paymentMethods = computed(function () {
                                             {{ Number::currency($product->price, 'IDR', 'id') }}</p>
                                         <div class="mt-1">
                                         @if($product->is_unlimited_stock)
-                                            <flux:badge size="xs" color="purple" inset="top bottom">Tanpa Stok</flux:badge>
+                                            <flux:badge size="xs" color="purple" inset="top bottom">{{ __('Tanpa Stok') }}</flux:badge>
                                         @elseif ($product->stock < 1)
                                             <flux:badge size="xs" color="red" inset="top bottom">{{ __('out of stock') }}
                                             </flux:badge>

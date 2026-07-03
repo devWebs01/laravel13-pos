@@ -277,5 +277,22 @@
     "Masukkan nama produk": "Masukkan nama produk",
     "otomatis dari nama": "otomatis dari nama",
     "otomatis jika kosong": "otomatis jika kosong",
-    "Masukkan deskripsi produk...": "Masukkan deskripsi produk..."
+    "Masukkan deskripsi produk...": "Masukkan deskripsi produk...",
+    "Image": "Gambar",
+    "A new verification link has been sent to your email address.": "Tautan verifikasi baru telah dikirim ke alamat email Anda.",
+    "Manage your store profile and receipt details.": "Kelola profil toko dan detail struk Anda.",
+    "Update product information.": "Perbarui informasi produk.",
+    "Product name, category, and identifiers.": "Nama produk, kategori, dan pengidentifikasi.",
+    "Set the product price.": "Atur harga produk.",
+    "Product description and status.": "Deskripsi produk dan status.",
+    "Tanpa Stok": "Tanpa Stok",
+    "Gambar Produk": "Gambar Produk",
+    "Upload gambar produk. Format: JPEG, PNG, WebP. Maks: 2MB.": "Upload gambar produk. Format: JPEG, PNG, WebP. Maks: 2MB.",
+    "Transaksi Terbaru": "Transaksi Terbaru",
+    "Produk Terlaris": "Produk Terlaris",
+    "System": "Sistem",
+    "Recovery codes": "Kode Pemulihan",
+    "Item": "Item",
+    "Failed to fetch setup data.": "Gagal mengambil data pengaturan.",
+    "Failed to load recovery codes": "Gagal memuat kode pemulihan"
 }

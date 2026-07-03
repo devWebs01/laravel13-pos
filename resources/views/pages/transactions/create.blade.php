@@ -224,7 +224,7 @@ $save = function () {
                                                 {{ Number::currency($product->price, 'IDR', 'id') }}</p>
                                             <div class="mt-1">
                                             @if($product->is_unlimited_stock)
-                                                <flux:badge size="xs" color="purple" inset="top bottom">Tanpa Stok</flux:badge>
+                                                <flux:badge size="xs" color="purple" inset="top bottom">{{ __('Tanpa Stok') }}</flux:badge>
                                             @elseif ($product->stock < 1)
                                                 <flux:badge size="xs" color="red" inset="top bottom">
                                                     {{ __('out of stock') }}

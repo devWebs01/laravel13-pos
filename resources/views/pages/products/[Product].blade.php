@@ -122,8 +122,8 @@ $clearErrors = function () {
     @volt
         <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl">
             <flux:breadcrumbs>
-                <flux:breadcrumbs.item href="dashboard">Dashboard</flux:breadcrumbs.item>
-                <flux:breadcrumbs.item href="{{ route('products.index') }}">Products</flux:breadcrumbs.item>
+                <flux:breadcrumbs.item href="dashboard">{{ __('Dashboard') }}</flux:breadcrumbs.item>
+                <flux:breadcrumbs.item href="{{ route('products.index') }}">{{ __('Products') }}</flux:breadcrumbs.item>
                 <flux:breadcrumbs.item>{{ $product->name }}</flux:breadcrumbs.item>
             </flux:breadcrumbs>
 
@@ -160,7 +160,7 @@ $clearErrors = function () {
                                 <flux:input wire:model="stock" :label="__('Stock')" type="number" min="0" :disabled="$is_unlimited_stock" />
                             </div>
                             <flux:field variant="inline">
-                                <flux:label>Tanpa Stok</flux:label>
+                                <flux:label>{{ __('Tanpa Stok') }}</flux:label>
                                 <flux:switch wire:model.live="is_unlimited_stock" />
                             </flux:field>
                         </div>
@@ -169,8 +169,8 @@ $clearErrors = function () {
                     {{-- Image --}}
                     <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
                         <div class="mb-6">
-                            <flux:heading size="lg">Gambar Produk</flux:heading>
-                            <flux:subheading>Upload gambar produk. Format: JPEG, PNG, WebP. Maks: 2MB.</flux:subheading>
+                            <flux:heading size="lg">{{ __('Gambar Produk') }}</flux:heading>
+                            <flux:subheading>{{ __('Upload gambar produk. Format: JPEG, PNG, WebP. Maks: 2MB.') }}</flux:subheading>
                         </div>
 
                         <input

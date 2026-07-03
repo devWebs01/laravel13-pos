@@ -173,7 +173,7 @@ mount(function (Transaction $transaction) {
         <div>
             <div>No: {{ $transaction->invoice_number }}</div>
             <div>Tgl: {{ $transaction->created_at->format('d/m/Y H:i') }}</div>
-            <div>Kasir: {{ $transaction->user?->name ?? 'System' }}</div>
+            <div>Kasir: {{ $transaction->user?->name ?? __('System') }}</div>
             @if($transaction->customer)
                 <div>Plgn: {{ $transaction->customer }}</div>
             @endif
@@ -184,9 +184,9 @@ mount(function (Transaction $transaction) {
         <table>
             <thead>
                 <tr>
-                    <th>Item</th>
+                    <th>{{ __('Item') }}</th>
                     <th class="text-right">Jml</th>
-                    <th class="text-right">Total</th>
+                    <th class="text-right">{{ __('Total') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -208,7 +208,7 @@ mount(function (Transaction $transaction) {
 
         <table class="total-section">
             <tr>
-                <td class="bold">TOTAL</td>
+                <td class="bold">{{ __('Total') }}</td>
                 <td class="text-right bold">{{ Number::currency($transaction->total_amount, 'IDR', 'id') }}</td>
             </tr>
             <tr>

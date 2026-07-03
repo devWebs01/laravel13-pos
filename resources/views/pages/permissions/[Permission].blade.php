@@ -54,7 +54,7 @@ $save = function () {
 
         <div class="w-full rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
             <form wire:submit="save" class="space-y-6">
-                <flux:input wire:model="name" :label="__('Name')" placeholder="manage-users" required />
+                <flux:input wire:model="name" :label="__('Name')" placeholder="kelola-pengguna" required />
 
                 <div class="flex justify-end gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-700">
                     <flux:button variant="filled" href="/permissions">{{ __('Cancel') }}</flux:button>
