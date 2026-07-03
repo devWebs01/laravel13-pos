@@ -23,14 +23,30 @@ jobs:
           extensions: mbstring, pdo_mysql, gd, intl, zip
           tools: composer:v2
 
+      - name: Cache Composer global cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-cache-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: vendor-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: vendor-${{ runner.os }}-
+
       - name: Install PHP dependencies
         run: |
-          composer install --no-dev --optimize-autoloader --no-interaction
+          if [ ! -f vendor/autoload.php ]; then
+            composer install --no-dev --optimize-autoloader --no-interaction
+          fi
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
       - name: Build assets
         run: |
@@ -117,8 +133,20 @@ jobs:
           port: 21
           security: loose
           log-level: verbose
+          state-name: .ftp-deploy-sync-state.json
           exclude: |
             **/.git*
             **/.git*/**
             **/node_modules/**
-            **/tests/****
+            **/tests/**
+            **/.editorconfig
+            **/.gitattributes
+            **/README.md
+            **/.env.example
+            **/phpunit.xml
+            **/CHANGELOG.md
+            **/DEPLOY-GUIDE.md
+            **/DEPLOY-PROMPT.md
+            **/storage/logs/**
+            **/storage/debugbar/**
+            **/storage/framework/cache/data/****
