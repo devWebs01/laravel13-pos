@@ -56,24 +56,7 @@ jobs:
           rsync -a public/ deploy/htdocs/
 
           # Create optimized htdocs/index.php that loads Laravel from ../laravel/
-          cat > deploy/htdocs/index.php << 'INDEXPHP'
-<?php
-
-use Illuminate\Foundation\Application;
-use Illuminate\Http\Request;
-
-define('LARAVEL_START', microtime(true));
-
-if (file_exists($maintenance = __DIR__.'/../laravel/storage/framework/maintenance.php')) {
-    require $maintenance;
-}
-
-require __DIR__.'/../laravel/vendor/autoload.php';
-
-$app = require_once __DIR__.'/../laravel/bootstrap/app.php';
-
-$app->handleRequest(Request::capture());
-INDEXPHP
+          cp deploy-scripts/htdocs-index.php deploy/htdocs/index.php
 
       - name: Create .env for production
         run: |
