@@ -56,7 +56,7 @@ jobs:
           rsync -a public/ deploy/htdocs/
 
           # Create optimized htdocs/index.php that loads Laravel from ../laravel/
-          cp deploy-scripts/htdocs-index.php deploy/htdocs/index.php
+          cp .github/deploy-scripts/htdocs-index.php deploy/htdocs/index.php
 
       - name: Create .env for production
         run: |
