@@ -139,7 +139,7 @@ else
 APP_NAME="POS-DW"
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://adpwork.page.gd
+APP_URL=https://pos-dw.site.je
 APP_LOCALE=id
 APP_FALLBACK_LOCALE=id
 APP_FAKER_LOCALE=id_ID
@@ -163,7 +163,7 @@ MAIL_PORT=587
 MAIL_USERNAME=null
 MAIL_PASSWORD=null
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="noreply@adpwork.page.gd"
+MAIL_FROM_ADDRESS="noreply@pos-dw.site.je"
 MAIL_FROM_NAME="${APP_NAME}"
 ENVFILE
     warn "ISI DULU konfigurasi database di $TEMP_DIR/laravel/.env sebelum upload!"

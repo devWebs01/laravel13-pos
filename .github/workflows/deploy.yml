@@ -81,7 +81,7 @@ INDEXPHP
 APP_NAME="POS-DW"
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://adpwork.page.gd
+APP_URL=https://pos-dw.site.je
 
 APP_LOCALE=id
 APP_FALLBACK_LOCALE=id
@@ -106,7 +106,7 @@ MAIL_PORT=587
 MAIL_USERNAME=null
 MAIL_PASSWORD=null
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="noreply@adpwork.page.gd"
+MAIL_FROM_ADDRESS="noreply@pos-dw.site.je"
 MAIL_FROM_NAME="${APP_NAME}"
 
 APP_KEY=${{ secrets.APP_KEY }}
@@ -126,10 +126,10 @@ ENVFILE
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ftpupload.net
-          username: if0_42168223
+          username: if0_39773534
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: deploy/
-          server-dir: /home/vol7_7/infinityfree.com/if0_42168223/
+          server-dir: /home/vol1_6/infinityfree.com/if0_39773534/
           protocol: ftp
           port: 21
           log-level: verbose
