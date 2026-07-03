@@ -115,7 +115,7 @@ jobs:
           server-dir: /home/vol1_6/infinityfree.com/if0_39773534/
           protocol: ftp
           port: 21
-          security: explicit
+          security: loose
           log-level: verbose
           exclude: |
             **/.git*
