@@ -1,6 +1,6 @@
 @props([
     'sidebar' => false,
-    'store_name' => \App\Models\Setting::first()->store_name,
+    'store_name' => optional(\App\Models\Setting::first())->store_name ?? config('app.name'),
 ])
 
 @if($sidebar)
