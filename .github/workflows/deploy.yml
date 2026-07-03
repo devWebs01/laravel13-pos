@@ -5,6 +5,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
@@ -42,6 +46,18 @@ jobs:
             composer install --no-dev --optimize-autoloader --no-interaction
           fi
 
+      - name: Validate Composer
+        run: composer validate --strict
+
+      - name: Check platform requirements
+        run: composer check-platform-reqs
+
+      - name: Dump optimized autoload
+        run: composer dump-autoload -o
+
+      - name: Verify vendor autoload
+        run: test -f vendor/autoload.php
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -52,6 +68,9 @@ jobs:
         run: |
           npm ci
           npm run build
+
+      - name: Verify build output
+        run: test -f public/build/manifest.json
 
       - name: Prepare deployment structure
         run: |
@@ -121,6 +140,15 @@ jobs:
           php artisan view:cache
           php artisan event:cache
 
+      - name: Verify deployment package
+        run: |
+          test -f deploy/htdocs/index.php
+          test -f deploy/laravel/artisan
+          test -f deploy/laravel/vendor/autoload.php
+          test -f deploy/laravel/.env
+          test -f deploy/htdocs/build/manifest.json
+          echo "Deployment package OK"
+
       - name: Deploy to InfinityFree via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
@@ -149,4 +177,9 @@ jobs:
             **/DEPLOY-PROMPT.md
             **/storage/logs/**
             **/storage/debugbar/**
-            **/storage/framework/cache/data/****
+            **/storage/framework/cache/data/**
+
+      - name: Health check
+        run: |
+          sleep 10
+          curl -sf -o /dev/null -w '%{http_code}' https://pos-dw.site.je || exit 1
