@@ -60,42 +60,42 @@ jobs:
 
       - name: Create .env for production
         run: |
-          cat > deploy/laravel/.env << 'ENVFILE'
-APP_NAME="POS-DW"
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://pos-dw.site.je
+          cat > deploy/laravel/.env << EOF
+          APP_NAME="POS-DW"
+          APP_ENV=production
+          APP_DEBUG=false
+          APP_URL=https://pos-dw.site.je
 
-APP_LOCALE=id
-APP_FALLBACK_LOCALE=id
-APP_FAKER_LOCALE=id_ID
+          APP_LOCALE=id
+          APP_FALLBACK_LOCALE=id
+          APP_FAKER_LOCALE=id_ID
 
-DB_CONNECTION=mysql
-DB_HOST=${{ secrets.DB_HOST }}
-DB_PORT=3306
-DB_DATABASE=${{ secrets.DB_DATABASE }}
-DB_USERNAME=${{ secrets.DB_USERNAME }}
-DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_CONNECTION=mysql
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=3306
+          DB_DATABASE=${{ secrets.DB_DATABASE }}
+          DB_USERNAME=${{ secrets.DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
 
-CACHE_DRIVER=file
-QUEUE_CONNECTION=sync
-SESSION_DRIVER=file
-SESSION_LIFETIME=120
-FILESYSTEM_DISK=local
+          CACHE_DRIVER=file
+          QUEUE_CONNECTION=sync
+          SESSION_DRIVER=file
+          SESSION_LIFETIME=120
+          FILESYSTEM_DISK=local
 
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=587
-MAIL_USERNAME=null
-MAIL_PASSWORD=null
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="noreply@pos-dw.site.je"
-MAIL_FROM_NAME="${APP_NAME}"
+          MAIL_MAILER=smtp
+          MAIL_HOST=smtp.gmail.com
+          MAIL_PORT=587
+          MAIL_USERNAME=null
+          MAIL_PASSWORD=null
+          MAIL_ENCRYPTION=tls
+          MAIL_FROM_ADDRESS="noreply@pos-dw.site.je"
+          MAIL_FROM_NAME="\${APP_NAME}"
 
-APP_KEY=${{ secrets.APP_KEY }}
+          APP_KEY=${{ secrets.APP_KEY }}
 
-VITE_APP_NAME="${APP_NAME}"
-ENVFILE
+          VITE_APP_NAME="\${APP_NAME}"
+          EOF
 
       - name: Cache Laravel config & routes
         run: |
