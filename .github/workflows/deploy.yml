@@ -105,6 +105,11 @@ jobs:
           php artisan view:cache
           php artisan event:cache
 
+      - name: Create remote directories
+        run: |
+          printf "mkdir /home/vol1_6/infinityfree.com/if0_39773534/pos-dw.site.je/laravel\nquit\n" | \
+            ftp -n ftpupload.net 2>&1 | grep -v "Connected\|220\|331\|230\|221\|^$" || true
+
       - name: Deploy to InfinityFree via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -121,4 +126,4 @@ jobs:
             **/.git*
             **/.git*/**
             **/node_modules/**
-            **/tests/**
+            **/tests/****
