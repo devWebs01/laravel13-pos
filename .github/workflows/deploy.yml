@@ -20,6 +20,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            composer:
+              - 'composer.lock'
+            node:
+              - 'package-lock.json'
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -42,17 +51,20 @@ jobs:
 
       - name: Install PHP dependencies
         run: |
-          if [ ! -f vendor/autoload.php ]; then
+          if [ "${{ steps.changes.outputs.composer }}" = "true" ] || [ ! -f vendor/autoload.php ]; then
             composer install --no-dev --optimize-autoloader --no-interaction
           fi
 
       - name: Validate Composer
+        if: steps.changes.outputs.composer == 'true'
         run: composer validate --strict
 
       - name: Check platform requirements
+        if: steps.changes.outputs.composer == 'true'
         run: composer check-platform-reqs
 
       - name: Dump optimized autoload
+        if: steps.changes.outputs.composer == 'true'
         run: composer dump-autoload -o
 
       - name: Verify vendor autoload
@@ -66,10 +78,13 @@ jobs:
 
       - name: Build assets
         run: |
-          npm ci
-          npm run build
+          if [ "${{ steps.changes.outputs.node }}" = "true" ] || [ ! -f public/build/manifest.json ]; then
+            npm ci
+            npm run build
+          fi
 
       - name: Verify build output
+        if: steps.changes.outputs.node == 'true'
         run: test -f public/build/manifest.json
 
       - name: Prepare deployment structure
