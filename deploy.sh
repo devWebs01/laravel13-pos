@@ -106,7 +106,7 @@ rsync -a public/ "$TEMP_DIR/htdocs/"
 
 # ---- Create optimized htdocs/index.php ----
 info "Membuat htdocs/index.php yang dioptimalkan..."
-cp deploy-scripts/htdocs-index.php "$TEMP_DIR/htdocs/index.php"
+cp .github/deploy-scripts/htdocs-index.php "$TEMP_DIR/htdocs/index.php"
 
 # ---- Copy .env.production jika ada, atau buat dari .env ----
 if [ -f ".env.production" ]; then
