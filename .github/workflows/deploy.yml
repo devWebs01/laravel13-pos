@@ -89,28 +89,39 @@ jobs:
 
       - name: Prepare deployment structure
         run: |
-          mkdir -p deploy/htdocs deploy/laravel
+          mkdir -p deploy/htdocs/_core
 
-          # Move Laravel source (excluding public/) into laravel/
-          rsync -a --exclude='public' --exclude='deploy' --exclude='.git' --exclude='.github' --exclude='.ddev' --exclude='node_modules' --exclude='tests' --exclude='storage/app' --exclude='storage/debugbar' --exclude='storage/logs' --exclude='storage/framework/cache/data' . deploy/laravel/
+          # Move Laravel source (excluding public/) into htdocs/_core/
+          rsync -a --exclude='public' --exclude='deploy' --exclude='.git' --exclude='.github' --exclude='.ddev' --exclude='node_modules' --exclude='tests' --exclude='storage/app' --exclude='storage/debugbar' --exclude='storage/logs' --exclude='storage/framework/cache/data' . deploy/htdocs/_core/
 
           # Ensure storage directories exist
-          mkdir -p deploy/laravel/storage/app/public
-          mkdir -p deploy/laravel/storage/framework/cache
-          mkdir -p deploy/laravel/storage/framework/sessions
-          mkdir -p deploy/laravel/storage/framework/views
-          mkdir -p deploy/laravel/storage/logs
-          mkdir -p deploy/laravel/bootstrap/cache
+          mkdir -p deploy/htdocs/_core/storage/app/public
+          mkdir -p deploy/htdocs/_core/storage/framework/cache
+          mkdir -p deploy/htdocs/_core/storage/framework/sessions
+          mkdir -p deploy/htdocs/_core/storage/framework/views
+          mkdir -p deploy/htdocs/_core/storage/logs
+          mkdir -p deploy/htdocs/_core/bootstrap/cache
 
           # Move public/ contents into htdocs/
           rsync -a public/ deploy/htdocs/
 
-          # Create optimized htdocs/index.php that loads Laravel from ../laravel/
+          # Create optimized htdocs/index.php that loads Laravel from _core/
           cp .github/deploy-scripts/htdocs-index.php deploy/htdocs/index.php
+
+          # Create .htaccess to block direct access to _core/
+          cat > deploy/htdocs/_core/.htaccess << 'HTACCESS'
+          <IfModule mod_authz_core.c>
+              Require all denied
+          </IfModule>
+          <IfModule !mod_authz_core.c>
+              Order Allow,Deny
+              Deny from all
+          </IfModule>
+          HTACCESS
 
       - name: Create .env for production
         run: |
-          cat > deploy/laravel/.env << EOF
+          cat > deploy/htdocs/_core/.env << EOF
           APP_NAME="POS-DW"
           APP_ENV=production
           APP_DEBUG=false
@@ -149,7 +160,7 @@ jobs:
 
       - name: Cache Laravel config & routes
         run: |
-          cd deploy/laravel
+          cd deploy/htdocs/_core
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
@@ -158,9 +169,10 @@ jobs:
       - name: Verify deployment package
         run: |
           test -f deploy/htdocs/index.php
-          test -f deploy/laravel/artisan
-          test -f deploy/laravel/vendor/autoload.php
-          test -f deploy/laravel/.env
+          test -f deploy/htdocs/_core/artisan
+          test -f deploy/htdocs/_core/vendor/autoload.php
+          test -f deploy/htdocs/_core/.env
+          test -f deploy/htdocs/_core/.htaccess
           test -f deploy/htdocs/build/manifest.json
           echo "Deployment package OK"
 
@@ -170,8 +182,8 @@ jobs:
           server: ftpupload.net
           username: if0_39773534
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: deploy/
-          server-dir: pos-dw.site.je/
+          local-dir: deploy/htdocs/
+          server-dir: pos-dw.site.je/htdocs/
           protocol: ftp
           port: 21
           security: loose
