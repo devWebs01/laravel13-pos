@@ -92,7 +92,7 @@ jobs:
           mkdir -p deploy/htdocs/_core
 
           # Move Laravel source (excluding public/) into htdocs/_core/
-          rsync -a --exclude='public' --exclude='deploy' --exclude='.git' --exclude='.github' --exclude='.ddev' --exclude='node_modules' --exclude='tests' --exclude='storage/app' --exclude='storage/debugbar' --exclude='storage/logs' --exclude='storage/framework/cache/data' . deploy/htdocs/_core/
+           rsync -a --exclude='public' --exclude='deploy' --exclude='.git' --exclude='.github' --exclude='.ddev' --exclude='node_modules' --exclude='tests' --exclude='storage/app' --exclude='storage/debugbar' --exclude='storage/logs' --exclude='storage/framework/cache/data' --exclude='.php-version' . deploy/htdocs/_core/
 
           # Ensure storage directories exist
           mkdir -p deploy/htdocs/_core/storage/app/public
@@ -108,14 +108,14 @@ jobs:
           # Create optimized htdocs/index.php that loads Laravel from _core/
           cp .github/deploy-scripts/htdocs-index.php deploy/htdocs/index.php
 
-          # Create .htaccess to block direct access to _core/
-          cat > deploy/htdocs/_core/.htaccess << 'HTACCESS'
-          <IfModule mod_authz_core.c>
-              Require all denied
-          </IfModule>
-          <IfModule !mod_authz_core.c>
-              Order Allow,Deny
-              Deny from all
+          # Overwrite .htaccess with minimal version for compatibility
+          cat > deploy/htdocs/.htaccess << 'HTACCESS'
+          <IfModule mod_rewrite.c>
+              RewriteEngine On
+
+              RewriteCond %{REQUEST_FILENAME} !-d
+              RewriteCond %{REQUEST_FILENAME} !-f
+              RewriteRule ^ index.php [L]
           </IfModule>
           HTACCESS
 
@@ -172,9 +172,15 @@ jobs:
           test -f deploy/htdocs/_core/artisan
           test -f deploy/htdocs/_core/vendor/autoload.php
           test -f deploy/htdocs/_core/.env
-          test -f deploy/htdocs/_core/.htaccess
+          test -f deploy/htdocs/.htaccess
           test -f deploy/htdocs/build/manifest.json
           echo "Deployment package OK"
+
+      - name: Clean up old _core/.htaccess on server
+        run: |
+          curl -s -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
+            ftp://ftpupload.net/pos-dw.site.je/htdocs/_core/.htaccess \
+            -Q "DELE _core/.htaccess" || true
 
       - name: Deploy to InfinityFree via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
@@ -187,7 +193,7 @@ jobs:
           protocol: ftp
           port: 21
           security: loose
-          log-level: verbose
+          log-level: minimal
           state-name: .ftp-deploy-sync-state.json
           exclude: |
             **/.git*
