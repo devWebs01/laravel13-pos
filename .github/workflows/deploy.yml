@@ -89,23 +89,23 @@ jobs:
 
       - name: Prepare deployment structure
         run: |
-          mkdir -p deploy/htdocs/_core
+          mkdir -p deploy/htdocs/laravel
 
-          # Move Laravel source (excluding public/) into htdocs/_core/
-           rsync -a --exclude='public' --exclude='deploy' --exclude='.git' --exclude='.github' --exclude='.ddev' --exclude='node_modules' --exclude='tests' --exclude='storage/app' --exclude='storage/debugbar' --exclude='storage/logs' --exclude='storage/framework/cache/data' --exclude='.php-version' . deploy/htdocs/_core/
+          # Move Laravel source (excluding public/) into htdocs/laravel/
+           rsync -a --exclude='public' --exclude='deploy' --exclude='.git' --exclude='.github' --exclude='.ddev' --exclude='node_modules' --exclude='tests' --exclude='storage/app' --exclude='storage/debugbar' --exclude='storage/logs' --exclude='storage/framework/cache/data' --exclude='.php-version' . deploy/htdocs/laravel/
 
           # Ensure storage directories exist
-          mkdir -p deploy/htdocs/_core/storage/app/public
-          mkdir -p deploy/htdocs/_core/storage/framework/cache
-          mkdir -p deploy/htdocs/_core/storage/framework/sessions
-          mkdir -p deploy/htdocs/_core/storage/framework/views
-          mkdir -p deploy/htdocs/_core/storage/logs
-          mkdir -p deploy/htdocs/_core/bootstrap/cache
+          mkdir -p deploy/htdocs/laravel/storage/app/public
+          mkdir -p deploy/htdocs/laravel/storage/framework/cache
+          mkdir -p deploy/htdocs/laravel/storage/framework/sessions
+          mkdir -p deploy/htdocs/laravel/storage/framework/views
+          mkdir -p deploy/htdocs/laravel/storage/logs
+          mkdir -p deploy/htdocs/laravel/bootstrap/cache
 
           # Move public/ contents into htdocs/
           rsync -a public/ deploy/htdocs/
 
-          # Create optimized htdocs/index.php that loads Laravel from _core/
+          # Create optimized htdocs/index.php that loads Laravel from laravel/
           cp .github/deploy-scripts/htdocs-index.php deploy/htdocs/index.php
 
           # Overwrite .htaccess with minimal version for compatibility
@@ -121,7 +121,7 @@ jobs:
 
       - name: Create .env for production
         run: |
-          cat > deploy/htdocs/_core/.env << EOF
+          cat > deploy/htdocs/laravel/.env << EOF
           APP_NAME="POS-DW"
           APP_ENV=production
           APP_DEBUG=false
@@ -160,7 +160,7 @@ jobs:
 
       - name: Cache Laravel config & routes
         run: |
-          cd deploy/htdocs/_core
+          cd deploy/htdocs/laravel
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
@@ -169,18 +169,18 @@ jobs:
       - name: Verify deployment package
         run: |
           test -f deploy/htdocs/index.php
-          test -f deploy/htdocs/_core/artisan
-          test -f deploy/htdocs/_core/vendor/autoload.php
-          test -f deploy/htdocs/_core/.env
+          test -f deploy/htdocs/laravel/artisan
+          test -f deploy/htdocs/laravel/vendor/autoload.php
+          test -f deploy/htdocs/laravel/.env
           test -f deploy/htdocs/.htaccess
           test -f deploy/htdocs/build/manifest.json
           echo "Deployment package OK"
 
-      - name: Clean up old _core/.htaccess on server
+      - name: Clean up old _core folder on server
         run: |
           curl -s -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
-            ftp://ftpupload.net/pos-dw.site.je/htdocs/_core/.htaccess \
-            -Q "DELE _core/.htaccess" || true
+            ftp://ftpupload.net/pos-dw.site.je/htdocs/ \
+            -Q "RMD _core" || true
 
       - name: Deploy to InfinityFree via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
