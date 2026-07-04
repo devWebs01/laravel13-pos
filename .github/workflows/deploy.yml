@@ -89,39 +89,36 @@ jobs:
 
       - name: Prepare deployment structure
         run: |
-          mkdir -p deploy/htdocs/laravel
+          mkdir -p deploy/htdocs
 
-          # Move Laravel source (excluding public/) into htdocs/laravel/
-           rsync -a --exclude='public' --exclude='deploy' --exclude='.git' --exclude='.github' --exclude='.ddev' --exclude='node_modules' --exclude='tests' --exclude='storage/app' --exclude='storage/debugbar' --exclude='storage/logs' --exclude='storage/framework/cache/data' --exclude='.php-version' . deploy/htdocs/laravel/
+          # Copy all project files (including public/) into deploy/htdocs/
+          rsync -a --exclude='deploy' --exclude='.git' --exclude='.github' --exclude='.ddev' --exclude='node_modules' --exclude='tests' --exclude='storage/app' --exclude='storage/debugbar' --exclude='storage/logs' --exclude='storage/framework/cache/data' --exclude='.php-version' . deploy/htdocs/
 
-          # Ensure storage directories exist
-          mkdir -p deploy/htdocs/laravel/storage/app/public
-          mkdir -p deploy/htdocs/laravel/storage/framework/cache
-          mkdir -p deploy/htdocs/laravel/storage/framework/sessions
-          mkdir -p deploy/htdocs/laravel/storage/framework/views
-          mkdir -p deploy/htdocs/laravel/storage/logs
-          mkdir -p deploy/htdocs/laravel/bootstrap/cache
-
-          # Move public/ contents into htdocs/
+          # Merge public/ contents into root for direct static serving
           rsync -a public/ deploy/htdocs/
 
-          # Create optimized htdocs/index.php that loads Laravel from laravel/
-          cp .github/deploy-scripts/htdocs-index.php deploy/htdocs/index.php
+          # Ensure storage directories exist
+          mkdir -p deploy/htdocs/storage/app/public
+          mkdir -p deploy/htdocs/storage/framework/cache
+          mkdir -p deploy/htdocs/storage/framework/sessions
+          mkdir -p deploy/htdocs/storage/framework/views
+          mkdir -p deploy/htdocs/storage/logs
+          mkdir -p deploy/htdocs/bootstrap/cache
 
-          # Overwrite .htaccess with minimal version for compatibility
+          # Create .htaccess to rewrite all non-file requests to public/index.php
           cat > deploy/htdocs/.htaccess << 'HTACCESS'
           <IfModule mod_rewrite.c>
               RewriteEngine On
 
               RewriteCond %{REQUEST_FILENAME} !-d
               RewriteCond %{REQUEST_FILENAME} !-f
-              RewriteRule ^ index.php [L]
+              RewriteRule ^ public/index.php [L]
           </IfModule>
           HTACCESS
 
       - name: Create .env for production
         run: |
-          cat > deploy/htdocs/laravel/.env << EOF
+          cat > deploy/htdocs/.env << EOF
           APP_NAME="POS-DW"
           APP_ENV=production
           APP_DEBUG=false
@@ -160,7 +157,7 @@ jobs:
 
       - name: Cache Laravel config & routes
         run: |
-          cd deploy/htdocs/laravel
+          cd deploy/htdocs
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
@@ -168,49 +165,45 @@ jobs:
 
       - name: Verify deployment package
         run: |
-          test -f deploy/htdocs/index.php
-          test -f deploy/htdocs/laravel/artisan
-          test -f deploy/htdocs/laravel/vendor/autoload.php
-          test -f deploy/htdocs/laravel/.env
+          test -f deploy/htdocs/public/index.php
+          test -f deploy/htdocs/artisan
+          test -f deploy/htdocs/vendor/autoload.php
+          test -f deploy/htdocs/.env
           test -f deploy/htdocs/.htaccess
           test -f deploy/htdocs/build/manifest.json
           echo "Deployment package OK"
 
-      - name: Clean up old _core folder on server
-        run: |
-          curl -s -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
-            ftp://ftpupload.net/pos-dw.site.je/htdocs/ \
-            -Q "RMD _core" || true
+      - name: Install lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
 
-      - name: Deploy to InfinityFree via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
-        with:
-          server: ftpupload.net
-          username: if0_39773534
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: deploy/htdocs/
-          server-dir: pos-dw.site.je/htdocs/
-          protocol: ftp
-          port: 21
-          security: loose
-          log-level: minimal
-          state-name: .ftp-deploy-sync-state.json
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/tests/**
-            **/.editorconfig
-            **/.gitattributes
-            **/README.md
-            **/.env.example
-            **/phpunit.xml
-            **/CHANGELOG.md
-            **/DEPLOY-GUIDE.md
-            **/DEPLOY-PROMPT.md
-            **/storage/logs/**
-            **/storage/debugbar/**
-            **/storage/framework/cache/data/**
+      - name: Clean up old folders on server
+        run: |
+          lftp -c "
+          set ftp:ssl-allow no
+          set net:timeout 15
+          open -u if0_39773534,'${{ secrets.FTP_PASSWORD }}' ftpupload.net
+          cd /pos-dw.site.je/htdocs
+          rm -rf _core 2>/dev/null; echo 'done _core'
+          rm -rf laravel 2>/dev/null; echo 'done laravel'
+          "
+
+      - name: Deploy to InfinityFree via LFTP
+        run: |
+          lftp -c "
+          set ftp:ssl-allow no
+          set net:timeout 30
+          set net:max-retries 3
+          open -u if0_39773534,'${{ secrets.FTP_PASSWORD }}' ftpupload.net
+          mirror -R --verbose \
+            --exclude .gitignore --exclude .git/ --exclude node_modules/ --exclude tests/ \
+            --exclude .editorconfig --exclude .gitattributes \
+            --exclude README.md --exclude .env.example \
+            --exclude phpunit.xml --exclude CHANGELOG.md \
+            --exclude DEPLOY-GUIDE.md --exclude DEPLOY-PROMPT.md \
+            --exclude storage/logs/ --exclude storage/debugbar/ \
+            --exclude storage/framework/cache/data/ \
+            deploy/htdocs/ /pos-dw.site.je/htdocs/
+          "
 
       - name: Health check
         run: |
