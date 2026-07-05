@@ -211,24 +211,26 @@ jobs:
           done
           echo "Cleanup selesai"
 
-      - name: Deploy via FTP (find + curl)
+      - name: Deploy via FTP (sequential)
         env:
           FTP_PASS: ${{ secrets.FTP_PASSWORD }}
         run: |
           i=0
-          find deploy/htdocs -type f | while IFS= read -r f; do
+          find deploy/htdocs -type f | sort | while IFS= read -r f; do
             rel="${f#deploy/htdocs/}"
             case "$rel" in
               .git/*|node_modules/*|.editorconfig|.gitattributes|.gitignore|README.md|.env.example|phpunit.xml|postcss.config.js|package.json|tailwind.config.js|vite.config.js|CHANGELOG.md|DEPLOY-GUIDE.md|DEPLOY-PROMPT.md|storage/logs/*|storage/debugbar/*|storage/framework/cache/data/*)
                 continue ;;
+              vendor/*)
+                [ "${{ steps.changes.outputs.composer }}" = "false" ] && continue ;;
             esac
-            curl -s --connect-timeout 30 --retry 3 --ftp-create-dirs \
+            i=$((i+1))
+            echo "[$i] $rel"
+            curl -s -S --connect-timeout 30 --retry 3 --retry-delay 2 \
               -u "if0_39773534:${FTP_PASS}" \
-              -T "$f" "ftp://ftpupload.net/pos-dw.site.je/htdocs/${rel}" &
-            if [ $((++i % 10)) -eq 0 ]; then wait; fi
+              -T "$f" "ftp://ftpupload.net/pos-dw.site.je/htdocs/${rel}" || echo "GAGAL: $rel"
           done
-          wait
-          echo "Deploy selesai"
+          echo "=== Deploy selesai — $i files ==="
 
       - name: Health check
         run: |
