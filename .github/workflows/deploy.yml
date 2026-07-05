@@ -15,6 +15,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
@@ -89,56 +90,60 @@ jobs:
 
       - name: Prepare deployment structure
         run: |
-          mkdir -p deploy/htdocs
+          mkdir -p deploy/htdocs/public deploy/htdocs/laravel_app
 
-          # Copy all project files (including public/) into deploy/htdocs/
-          rsync -a --exclude='deploy' --exclude='.git' --exclude='.github' --exclude='.ddev' --exclude='.agents' --exclude='.ai' --exclude='node_modules' --exclude='tests' --exclude='storage/app' --exclude='storage/debugbar' --exclude='storage/logs' --exclude='storage/framework' --exclude='.php-version' --exclude='.deployignore' --exclude='.devdbrc' --exclude='.lerd.yaml' --exclude='.env.deploy.example' --exclude='.env.deploy' --exclude='AGENTS.md' --exclude='docs' --exclude='bootstrap/cache' . deploy/htdocs/
+          # Copy all source code into laravel_app/
+          rsync -a --exclude='deploy' --exclude='.git' --exclude='.github' --exclude='.ddev' --exclude='.agents' --exclude='.ai' --exclude='node_modules' --exclude='tests' --exclude='storage/app' --exclude='storage/debugbar' --exclude='storage/logs' --exclude='storage/framework' --exclude='.php-version' --exclude='.deployignore' --exclude='.devdbrc' --exclude='.lerd.yaml' --exclude='.env.deploy.example' --exclude='.env.deploy' --exclude='AGENTS.md' --exclude='docs' --exclude='bootstrap/cache' . deploy/htdocs/laravel_app/
 
-          # Merge public/ assets into root for direct static serving
-          rsync -a public/ deploy/htdocs/
+          # Copy public/ to htdocs/public/
+          rsync -a public/ deploy/htdocs/public/
 
-          # Hapus file repo yang tidak perlu dari deploy
-          rm -f deploy/htdocs/.editorconfig deploy/htdocs/.env.example \
-                deploy/htdocs/.gitattributes deploy/htdocs/.gitignore \
-                deploy/htdocs/README.md deploy/htdocs/postcss.config.js \
-                deploy/htdocs/phpunit.xml deploy/htdocs/package.json \
-                deploy/htdocs/tailwind.config.js deploy/htdocs/vite.config.js \
-                deploy/htdocs/CHANGELOG.md deploy/htdocs/DEPLOY-GUIDE.md \
-                deploy/htdocs/DEPLOY-PROMPT.md deploy/htdocs/.env.deploy.example \
-                deploy/htdocs/.deployignore deploy/htdocs/.devdbrc \
-                deploy/htdocs/.lerd.yaml deploy/htdocs/AGENTS.md
-          rm -rf deploy/htdocs/.agents deploy/htdocs/.ai deploy/htdocs/tests deploy/htdocs/cache deploy/htdocs/docs 2>/dev/null || true
+          # Cleanup file tak perlu dari laravel_app/
+          rm -f deploy/htdocs/laravel_app/.editorconfig deploy/htdocs/laravel_app/.env.example \
+                deploy/htdocs/laravel_app/.gitattributes deploy/htdocs/laravel_app/.gitignore \
+                deploy/htdocs/laravel_app/README.md deploy/htdocs/laravel_app/postcss.config.js \
+                deploy/htdocs/laravel_app/phpunit.xml deploy/htdocs/laravel_app/package.json \
+                deploy/htdocs/laravel_app/tailwind.config.js deploy/htdocs/laravel_app/vite.config.js \
+                deploy/htdocs/laravel_app/CHANGELOG.md deploy/htdocs/laravel_app/DEPLOY-GUIDE.md \
+                deploy/htdocs/laravel_app/DEPLOY-PROMPT.md deploy/htdocs/laravel_app/.env.deploy.example \
+                deploy/htdocs/laravel_app/.deployignore deploy/htdocs/laravel_app/.devdbrc \
+                deploy/htdocs/laravel_app/.lerd.yaml deploy/htdocs/laravel_app/AGENTS.md
+          rm -rf deploy/htdocs/laravel_app/.agents deploy/htdocs/laravel_app/.ai deploy/htdocs/laravel_app/tests deploy/htdocs/laravel_app/cache deploy/htdocs/laravel_app/docs 2>/dev/null || true
 
           # Ensure storage directories exist
-          mkdir -p deploy/htdocs/storage/app/public
-          mkdir -p deploy/htdocs/storage/framework/cache
-          mkdir -p deploy/htdocs/storage/framework/sessions
-          mkdir -p deploy/htdocs/storage/framework/views
-          mkdir -p deploy/htdocs/storage/logs
-          mkdir -p deploy/htdocs/bootstrap/cache
+          mkdir -p deploy/htdocs/laravel_app/storage/app/public
+          mkdir -p deploy/htdocs/laravel_app/storage/framework/cache
+          mkdir -p deploy/htdocs/laravel_app/storage/framework/sessions
+          mkdir -p deploy/htdocs/laravel_app/storage/framework/views
+          mkdir -p deploy/htdocs/laravel_app/storage/logs
+          mkdir -p deploy/htdocs/laravel_app/bootstrap/cache
 
-          # .htaccess — rewrite internal ke public/index.php + handle root URL
+          # Root .htaccess — rewrite ke public, kecualikan public/ dan laravel_app/
           cat > deploy/htdocs/.htaccess << 'HTACCESS'
           <IfModule mod_rewrite.c>
               RewriteEngine On
 
-              RewriteRule "(^|/)\." - [F]
+              RewriteCond %{REQUEST_URI} !^/public/
+              RewriteCond %{REQUEST_URI} !^/laravel_app/
 
-              RewriteCond %{REQUEST_FILENAME} !-d
-              RewriteCond %{REQUEST_URI} (.+)/$
-              RewriteRule ^ %1 [L,R=301]
+              RewriteRule ^$ public/ [L]
 
-              RewriteRule ^$ public/index.php [L]
-
-              RewriteCond %{REQUEST_FILENAME} !-d
               RewriteCond %{REQUEST_FILENAME} !-f
-              RewriteRule ^ public/index.php [L]
+              RewriteCond %{REQUEST_FILENAME} !-d
+              RewriteRule ^(.*)$ public/$1 [L]
           </IfModule>
           HTACCESS
 
+          # Block direct access to laravel_app/
+          cat > deploy/htdocs/laravel_app/.htaccess << 'DENY'
+          <IfModule mod_authz_core.c>
+              Require all denied
+          </IfModule>
+          DENY
+
       - name: Create .env for production
         run: |
-          cat > deploy/htdocs/.env << EOF
+          cat > deploy/htdocs/laravel_app/.env << EOF
           APP_NAME="POS-DW"
           APP_ENV=production
           APP_DEBUG=false
@@ -177,7 +182,7 @@ jobs:
 
       - name: Cache Laravel config & routes
         run: |
-          cd deploy/htdocs
+          cd deploy/htdocs/laravel_app
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
@@ -186,11 +191,11 @@ jobs:
       - name: Verify deployment package
         run: |
           test -f deploy/htdocs/public/index.php
-          test -f deploy/htdocs/artisan
-          test -f deploy/htdocs/vendor/autoload.php
-          test -f deploy/htdocs/.env
+          test -f deploy/htdocs/laravel_app/artisan
+          test -f deploy/htdocs/laravel_app/vendor/autoload.php
+          test -f deploy/htdocs/laravel_app/.env
           test -f deploy/htdocs/.htaccess
-          test -f deploy/htdocs/build/manifest.json
+          test -f deploy/htdocs/public/build/manifest.json
           echo "Deployment package OK"
 
       - name: Cleanup sisa Softaculous di server
@@ -218,12 +223,12 @@ jobs:
           FTP_PASS: ${{ secrets.FTP_PASSWORD }}
         run: |
           TMP=$(mktemp)
-          # Collect parent dirs from non-vendor files
-          find deploy/htdocs -type f -not -path '*/vendor/*' | sort \
+          # Collect parent dirs from public/ + laravel_app/ (non-vendor)
+          find deploy/htdocs/public deploy/htdocs/laravel_app -type f -not -path '*/vendor/*' | sort \
             | while IFS= read -r f; do
             rel="${f#deploy/htdocs/}"
             case "$rel" in
-              docs/*|bootstrap/cache/*|storage/logs/*|storage/debugbar/*|storage/framework/cache/*|storage/framework/sessions/*|storage/framework/views/*|storage/framework/testing/*|.editorconfig|.gitattributes|.gitignore|README.md|.env.example|.env.deploy.example|phpunit.xml|postcss.config.js|package.json|tailwind.config.js|vite.config.js|CHANGELOG.md|DEPLOY-GUIDE.md|DEPLOY-PROMPT.md|.deployignore|.devdbrc|.lerd.yaml|AGENTS.md)
+              laravel_app/docs/*|laravel_app/bootstrap/cache/*|laravel_app/storage/logs/*|laravel_app/storage/debugbar/*|laravel_app/storage/framework/cache/*|laravel_app/storage/framework/sessions/*|laravel_app/storage/framework/views/*|laravel_app/storage/framework/testing/*|laravel_app/.editorconfig|laravel_app/.gitattributes|laravel_app/.gitignore|laravel_app/README.md|laravel_app/.env.example|laravel_app/.env.deploy.example|laravel_app/phpunit.xml|laravel_app/postcss.config.js|laravel_app/package.json|laravel_app/tailwind.config.js|laravel_app/vite.config.js|laravel_app/CHANGELOG.md|laravel_app/DEPLOY-GUIDE.md|laravel_app/DEPLOY-PROMPT.md|laravel_app/.deployignore|laravel_app/.devdbrc|laravel_app/.lerd.yaml|laravel_app/AGENTS.md)
                 continue ;;
             esac
             dir=$(dirname "$rel")
@@ -231,7 +236,7 @@ jobs:
             echo "$dir"
           done > "$TMP"
           # Also include vendor subdirs (for when composer.lock changes)
-          find deploy/htdocs/vendor -type d | sed 's|^deploy/htdocs/||' >> "$TMP"
+          find deploy/htdocs/laravel_app/vendor -type d | sed 's|^deploy/htdocs/||' >> "$TMP"
 
           while IFS= read -r full; do
             parts=(${full//\// })
@@ -253,29 +258,47 @@ jobs:
           rm -f "$TMP" "${TMP}2"
           echo "Dir preparation selesai"
 
-      - name: Deploy via FTP (sequential)
+      - name: Install lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+
+      - name: Deploy via lftp
         env:
           FTP_PASS: ${{ secrets.FTP_PASSWORD }}
         run: |
-          i=0
-          find deploy/htdocs -type f | sort | while IFS= read -r f; do
-            rel="${f#deploy/htdocs/}"
-            case "$rel" in
-              .git/*|.agents/*|.ai/*|node_modules/*|docs/*|bootstrap/cache/*|storage/logs/*|storage/debugbar/*|storage/framework/cache/*|storage/framework/sessions/*|storage/framework/views/*|storage/framework/testing/*|.editorconfig|.gitattributes|.gitignore|README.md|.env.example|.env.deploy.example|phpunit.xml|postcss.config.js|package.json|tailwind.config.js|vite.config.js|CHANGELOG.md|DEPLOY-GUIDE.md|DEPLOY-PROMPT.md|.deployignore|.devdbrc|.lerd.yaml|AGENTS.md)
-                continue ;;
-              vendor/*)
-                [ "${{ steps.changes.outputs.composer }}" = "false" ] && continue ;;
-            esac
-            i=$((i+1))
-            echo "[$i] $rel"
-            curl -s -S -g --connect-timeout 30 --retry 3 --retry-delay 2 \
-              -u "if0_39773534:${FTP_PASS}" \
-              --ftp-method singlecwd \
-              -T "$f" "ftp://ftpupload.net/pos-dw.site.je/htdocs/${rel}" || echo "GAGAL: $rel"
-          done
-          echo "=== Deploy selesai — $i files ==="
+          EXCLUDE_VENDOR=""
+          if [ "${{ steps.changes.outputs.composer }}" = "false" ]; then
+            EXCLUDE_VENDOR="-X laravel_app/vendor"
+          fi
+          lftp -e "
+            set ftp:auto-create-dirs false
+            set net:max-retries 3
+            set ftp:passive-mode true
+            mirror --reverse --delete --verbose \
+              -X laravel_app/docs \
+              -X laravel_app/bootstrap/cache \
+              -X laravel_app/storage/logs \
+              -X laravel_app/storage/framework/cache \
+              -X laravel_app/storage/framework/sessions \
+              -X laravel_app/storage/framework/views \
+              -X laravel_app/storage/framework/testing \
+              -X laravel_app/.editorconfig \
+              -X laravel_app/.gitattributes \
+              -X laravel_app/.gitignore \
+              -X laravel_app/README.md \
+              -X laravel_app/.env.example \
+              -X laravel_app/.deployignore \
+              -X laravel_app/.devdbrc \
+              -X laravel_app/.lerd.yaml \
+              -X laravel_app/AGENTS.md \
+              -X laravel_app/.ai \
+              -X laravel_app/.agents \
+              $EXCLUDE_VENDOR \
+              deploy/htdocs/ \
+              pos-dw.site.je/htdocs/
+            quit
+          " -u "if0_39773534:${FTP_PASS}" ftp://ftpupload.net
 
       - name: Health check
         run: |
-          sleep 10
-          curl -sf -o /dev/null -w '%{http_code}' https://pos-dw.site.je || exit 1
+          sleep 15
+          curl --retry 5 --retry-delay 5 -sf -o /dev/null -w '%{http_code}' https://pos-dw.site.je || exit 1
