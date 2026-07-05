@@ -230,9 +230,8 @@ jobs:
             EXCLUDE_VENDOR="-X laravel_app/vendor"
           fi
           lftp -e "
-            set ftp:auto-create-dirs true
             set ftp:passive-mode true
-            set ftp:ssl-allow true
+            set ssl:verify-certificate false
             set net:timeout 30
             set net:max-retries 3
             set net:reconnect-interval-base 5
