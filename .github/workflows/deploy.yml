@@ -229,7 +229,7 @@ jobs:
           if [ "${{ steps.changes.outputs.composer }}" = "false" ]; then
             EXCLUDE_VENDOR="-X laravel_app/vendor"
           fi
-          lftp -u "if0_39773534:${FTP_PASS}" ftp://ftpupload.net -c "
+          lftp -u "if0_39773534:${FTP_PASS}" ftp://ftpupload.net -e "
             set ftp:passive-mode true;
             set net:timeout 30;
             set net:max-retries 3;
@@ -256,6 +256,7 @@ jobs:
               -X laravel_app/.agents \
               $EXCLUDE_VENDOR \
               deploy/htdocs/ .;
+            quit
           "
 
       - name: Health check
