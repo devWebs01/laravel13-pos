@@ -98,6 +98,11 @@ jobs:
           # Copy public/ to htdocs/public/
           rsync -a public/ deploy/htdocs/public/
 
+          # Patch public/index.php paths untuk struktur InfinityFree
+          sed -i 's|../vendor/autoload.php|../laravel_app/vendor/autoload.php|' deploy/htdocs/public/index.php
+          sed -i 's|../bootstrap/app.php|../laravel_app/bootstrap/app.php|' deploy/htdocs/public/index.php
+          sed -i 's|../storage/|../laravel_app/storage/|g' deploy/htdocs/public/index.php
+
           # Cleanup file tak perlu dari laravel_app/
           rm -f deploy/htdocs/laravel_app/.editorconfig deploy/htdocs/laravel_app/.env.example \
                 deploy/htdocs/laravel_app/.gitattributes deploy/htdocs/laravel_app/.gitignore \
@@ -247,7 +252,7 @@ jobs:
             set net:max-retries 3;
             set net:reconnect-interval-base 5;
             cd pos-dw.site.je/htdocs;
-            mirror --reverse --only-newer --delete --verbose \
+            mirror --reverse --only-newer --delete --no-perms --verbose \
               -X laravel_app/docs \
               -X laravel_app/bootstrap/cache \
               -X laravel_app/storage/logs \
