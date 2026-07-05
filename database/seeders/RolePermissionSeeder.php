@@ -35,15 +35,16 @@ class RolePermissionSeeder extends Seeder
             }
         }
 
-        $admin = Role::findOrCreate('admin');
-        $admin->syncPermissions($permissions);
-
         $pemilik = Role::findOrCreate('pemilik');
-        $pemilik->syncPermissions(
+        $pemilik->syncPermissions($permissions);
+
+        $admin = Role::findOrCreate('admin');
+        $admin->syncPermissions(
             $permissions->filter(fn ($p) =>
                 str($p)->startsWith('products.')
                 || str($p)->startsWith('categories.')
                 || $p === 'transactions.view'
+                || $p === 'transactions.create'
                 || $p === 'reports.view'
             )
         );
