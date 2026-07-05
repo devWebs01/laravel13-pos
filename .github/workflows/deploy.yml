@@ -94,8 +94,18 @@ jobs:
           # Copy all project files (including public/) into deploy/htdocs/
           rsync -a --exclude='deploy' --exclude='.git' --exclude='.github' --exclude='.ddev' --exclude='node_modules' --exclude='tests' --exclude='storage/app' --exclude='storage/debugbar' --exclude='storage/logs' --exclude='storage/framework/cache/data' --exclude='.php-version' . deploy/htdocs/
 
-          # Merge public/ contents into root for direct static serving
+          # Merge public/ assets into root for direct static serving
           rsync -a public/ deploy/htdocs/
+
+          # Hapus file repo yang tidak perlu dari deploy
+          rm -f deploy/htdocs/.editorconfig deploy/htdocs/.env.example \
+                deploy/htdocs/.gitattributes deploy/htdocs/.gitignore \
+                deploy/htdocs/README.md deploy/htdocs/postcss.config.js \
+                deploy/htdocs/phpunit.xml deploy/htdocs/package.json \
+                deploy/htdocs/tailwind.config.js deploy/htdocs/vite.config.js \
+                deploy/htdocs/CHANGELOG.md deploy/htdocs/DEPLOY-GUIDE.md \
+                deploy/htdocs/DEPLOY-PROMPT.md
+          rm -rf deploy/htdocs/tests deploy/htdocs/cache 2>/dev/null || true
 
           # Ensure storage directories exist
           mkdir -p deploy/htdocs/storage/app/public
@@ -105,10 +115,18 @@ jobs:
           mkdir -p deploy/htdocs/storage/logs
           mkdir -p deploy/htdocs/bootstrap/cache
 
-          # Create .htaccess to rewrite all non-file requests to public/index.php
+          # .htaccess — rewrite internal ke public/index.php + handle root URL
           cat > deploy/htdocs/.htaccess << 'HTACCESS'
           <IfModule mod_rewrite.c>
               RewriteEngine On
+
+              RewriteRule "(^|/)\." - [F]
+
+              RewriteCond %{REQUEST_FILENAME} !-d
+              RewriteCond %{REQUEST_URI} (.+)/$
+              RewriteRule ^ %1 [L,R=301]
+
+              RewriteRule ^$ public/index.php [L]
 
               RewriteCond %{REQUEST_FILENAME} !-d
               RewriteCond %{REQUEST_FILENAME} !-f
@@ -173,37 +191,24 @@ jobs:
           test -f deploy/htdocs/build/manifest.json
           echo "Deployment package OK"
 
-      - name: Install lftp
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
-
-      - name: Clean up old folders on server
+      - name: Deploy via FTP (find + curl)
+        env:
+          FTP_PASS: ${{ secrets.FTP_PASSWORD }}
         run: |
-          lftp -c "
-          set ftp:ssl-allow no
-          set net:timeout 15
-          open -u if0_39773534,'${{ secrets.FTP_PASSWORD }}' ftpupload.net
-          cd /pos-dw.site.je/htdocs
-          rm -rf _core 2>/dev/null; echo 'done _core'
-          rm -rf laravel 2>/dev/null; echo 'done laravel'
-          "
-
-      - name: Deploy to InfinityFree via LFTP
-        run: |
-          lftp -c "
-          set ftp:ssl-allow no
-          set net:timeout 30
-          set net:max-retries 3
-          open -u if0_39773534,'${{ secrets.FTP_PASSWORD }}' ftpupload.net
-          mirror -R --verbose \
-            --exclude .gitignore --exclude .git/ --exclude node_modules/ --exclude tests/ \
-            --exclude .editorconfig --exclude .gitattributes \
-            --exclude README.md --exclude .env.example \
-            --exclude phpunit.xml --exclude CHANGELOG.md \
-            --exclude DEPLOY-GUIDE.md --exclude DEPLOY-PROMPT.md \
-            --exclude storage/logs/ --exclude storage/debugbar/ \
-            --exclude storage/framework/cache/data/ \
-            deploy/htdocs/ /pos-dw.site.je/htdocs/
-          "
+          i=0
+          find deploy/htdocs -type f | while IFS= read -r f; do
+            rel="${f#deploy/htdocs/}"
+            case "$rel" in
+              .git/*|node_modules/*|.editorconfig|.gitattributes|.gitignore|README.md|.env.example|phpunit.xml|postcss.config.js|package.json|tailwind.config.js|vite.config.js|CHANGELOG.md|DEPLOY-GUIDE.md|DEPLOY-PROMPT.md|storage/logs/*|storage/debugbar/*|storage/framework/cache/data/*)
+                continue ;;
+            esac
+            curl -s --connect-timeout 30 --retry 3 --ftp-create-dirs \
+              -u "if0_39773534:${FTP_PASS}" \
+              -T "$f" "ftp://ftpupload.net/pos-dw.site.je/htdocs/${rel}" &
+            if [ $((++i % 10)) -eq 0 ]; then wait; fi
+          done
+          wait
+          echo "Deploy selesai"
 
       - name: Health check
         run: |
