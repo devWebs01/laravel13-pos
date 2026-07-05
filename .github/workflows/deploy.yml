@@ -92,7 +92,7 @@ jobs:
           mkdir -p deploy/htdocs
 
           # Copy all project files (including public/) into deploy/htdocs/
-          rsync -a --exclude='deploy' --exclude='.git' --exclude='.github' --exclude='.ddev' --exclude='node_modules' --exclude='tests' --exclude='storage/app' --exclude='storage/debugbar' --exclude='storage/logs' --exclude='storage/framework/cache/data' --exclude='.php-version' . deploy/htdocs/
+          rsync -a --exclude='deploy' --exclude='.git' --exclude='.github' --exclude='.ddev' --exclude='.agents' --exclude='.ai' --exclude='node_modules' --exclude='tests' --exclude='storage/app' --exclude='storage/debugbar' --exclude='storage/logs' --exclude='storage/framework/cache/data' --exclude='.php-version' --exclude='.deployignore' --exclude='.devdbrc' --exclude='.lerd.yaml' --exclude='.env.deploy.example' --exclude='.env.deploy' --exclude='AGENTS.md' . deploy/htdocs/
 
           # Merge public/ assets into root for direct static serving
           rsync -a public/ deploy/htdocs/
@@ -104,8 +104,10 @@ jobs:
                 deploy/htdocs/phpunit.xml deploy/htdocs/package.json \
                 deploy/htdocs/tailwind.config.js deploy/htdocs/vite.config.js \
                 deploy/htdocs/CHANGELOG.md deploy/htdocs/DEPLOY-GUIDE.md \
-                deploy/htdocs/DEPLOY-PROMPT.md
-          rm -rf deploy/htdocs/tests deploy/htdocs/cache 2>/dev/null || true
+                deploy/htdocs/DEPLOY-PROMPT.md deploy/htdocs/.env.deploy.example \
+                deploy/htdocs/.deployignore deploy/htdocs/.devdbrc \
+                deploy/htdocs/.lerd.yaml deploy/htdocs/AGENTS.md
+          rm -rf deploy/htdocs/.agents deploy/htdocs/.ai deploy/htdocs/tests deploy/htdocs/cache 2>/dev/null || true
 
           # Ensure storage directories exist
           mkdir -p deploy/htdocs/storage/app/public
@@ -198,10 +200,10 @@ jobs:
           BASE="ftp://ftpupload.net/pos-dw.site.je/htdocs"
           AUTH="if0_39773534:${FTP_PASS}"
           for f in \
-            README.md .editorconfig .env.example .gitattributes .gitignore \
+            README.md .editorconfig .env.example .env.deploy.example .gitattributes .gitignore \
             postcss.config.js phpunit.xml package.json tailwind.config.js \
             vite.config.js CHANGELOG.md DEPLOY-GUIDE.md DEPLOY-PROMPT.md \
-            public/favicon.ico public/robots.txt
+            public/favicon.ico public/robots.txt .deployignore .devdbrc .lerd.yaml AGENTS.md
           do
             curl -s -u "$AUTH" "$BASE/" -Q "DELE $f" >/dev/null 2>&1 || true
           done
@@ -219,7 +221,7 @@ jobs:
           find deploy/htdocs -type f | sort | while IFS= read -r f; do
             rel="${f#deploy/htdocs/}"
             case "$rel" in
-              .git/*|node_modules/*|.editorconfig|.gitattributes|.gitignore|README.md|.env.example|phpunit.xml|postcss.config.js|package.json|tailwind.config.js|vite.config.js|CHANGELOG.md|DEPLOY-GUIDE.md|DEPLOY-PROMPT.md|storage/logs/*|storage/debugbar/*|storage/framework/cache/data/*)
+              .git/*|.agents/*|.ai/*|node_modules/*|.editorconfig|.gitattributes|.gitignore|README.md|.env.example|.env.deploy.example|phpunit.xml|postcss.config.js|package.json|tailwind.config.js|vite.config.js|CHANGELOG.md|DEPLOY-GUIDE.md|DEPLOY-PROMPT.md|storage/logs/*|storage/debugbar/*|storage/framework/cache/data/*|.deployignore|.devdbrc|.lerd.yaml|AGENTS.md)
                 continue ;;
               vendor/*)
                 [ "${{ steps.changes.outputs.composer }}" = "false" ] && continue ;;
