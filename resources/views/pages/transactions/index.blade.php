@@ -44,7 +44,7 @@ $transactions = computed(function () {
     return Transaction::query()
         ->withCount('items')
         ->where(function ($q) {
-            $q->where('invoice_number', 'like', '%' . $this->search . '%')->orWhere('customer', 'like', '%' . $this->search . '%');
+            $q->where('invoice_number', 'like', '%' . $this->search . '%')->orWhere('customer_name', 'like', '%' . $this->search . '%');
         })
         ->orderBy($this->sortBy, $this->sortDirection)
         ->paginate(10);
