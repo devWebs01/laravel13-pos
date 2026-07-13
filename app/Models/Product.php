@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\CloudinaryService;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -36,6 +37,11 @@ class Product extends Model
 
         if (str_starts_with($this->image, 'http')) {
             return $this->image;
+        }
+
+        // Cloudinary public ID (no file extension, not a URL)
+        if (! pathinfo($this->image, PATHINFO_EXTENSION)) {
+            return app(CloudinaryService::class)->getUrl($this->image);
         }
 
         if (file_exists(storage_path('app/public/'.$this->image))) {

@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\Product;
+use App\Services\CloudinaryService;
 use Flux\Flux;
+use Illuminate\Support\Facades\Storage;
 use Livewire\WithPagination;
 
 use function Laravel\Folio\middleware;
@@ -81,6 +83,16 @@ $viewProduct = function ($id) {
 
 $delete = function () {
     $product = Product::findOrFail($this->deletingProductId);
+
+    $image = $product->image;
+    if ($image && ! str_starts_with($image, 'http')) {
+        if (pathinfo($image, PATHINFO_EXTENSION)) {
+            Storage::disk('public')->delete($image);
+        } else {
+            app(CloudinaryService::class)->delete($image);
+        }
+    }
+
     $product->delete();
 
     $this->deletingProductId = null;
