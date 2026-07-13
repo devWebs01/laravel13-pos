@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\{Category, Product};
+use App\Services\CloudinaryService;
 use Flux\Flux;
 use Illuminate\Support\Str;
 
@@ -73,7 +74,10 @@ $save = function () {
     ]);
 
     if ($this->image) {
-        $validated['image'] = $this->image->store('products', 'public');
+        $uploaded = app(CloudinaryService::class)->upload(
+            $this->image->getRealPath()
+        );
+        $validated['image'] = $uploaded['public_id'];
     } else {
         unset($validated['image']);
     }

@@ -2,7 +2,9 @@
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\CloudinaryService;
 use Flux\Flux;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
@@ -101,7 +103,19 @@ $save = function () {
     $validated = $this->validate($rules);
 
     if ($this->image instanceof TemporaryUploadedFile) {
-        $validated['image'] = $this->image->store('products', 'public');
+        $oldImage = $this->product->image;
+        if ($oldImage && ! str_starts_with($oldImage, 'http')) {
+            if (pathinfo($oldImage, PATHINFO_EXTENSION)) {
+                Storage::disk('public')->delete($oldImage);
+            } else {
+                app(CloudinaryService::class)->delete($oldImage);
+            }
+        }
+
+        $uploaded = app(CloudinaryService::class)->upload(
+            $this->image->getRealPath()
+        );
+        $validated['image'] = $uploaded['public_id'];
     }
 
     $this->product->update($validated);
