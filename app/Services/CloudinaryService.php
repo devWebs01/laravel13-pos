@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class CloudinaryService
 {
-    private ?Cloudinary $client = null;
+    private $client = null;
 
     public function __construct()
     {
