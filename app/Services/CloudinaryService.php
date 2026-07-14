@@ -27,7 +27,7 @@ class CloudinaryService
         return $this->client !== null;
     }
 
-    public function upload(string $filePath, ?string $folder = 'products'): ?array
+    public function upload(string $filePath, ?string $folder = 'pos_dw'): ?array
     {
         if (! $this->ready()) {
             return null;
