@@ -32,7 +32,7 @@ mount(function (User $user) {
     $this->selectedRoles = $user->roles->pluck('name')->toArray();
 });
 
-$roles = computed(fn() => Role::whereNot('name', 'admin')->get());
+$roles = computed(fn() => Role::whereNot('name', 'kasir')->get());
 
 $save = function () {
     $this->validate([

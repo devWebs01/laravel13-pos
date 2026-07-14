@@ -35,11 +35,11 @@ class RolePermissionSeeder extends Seeder
             }
         }
 
-        $admin = Role::findOrCreate('admin');
-        $admin->syncPermissions($permissions);
+        $kasir = Role::findOrCreate('kasir');
+        $kasir->syncPermissions($permissions);
 
-        $pemilik = Role::findOrCreate('pemilik');
-        $pemilik->syncPermissions(
+        $admin = Role::findOrCreate('admin');
+        $admin->syncPermissions(
             $permissions->filter(fn ($p) =>
                 str($p)->startsWith('products.')
                 || str($p)->startsWith('categories.')
@@ -52,11 +52,11 @@ class RolePermissionSeeder extends Seeder
         $pemilikUser = User::where('email', 'pemilik@testing.com')->first();
 
         if ($adminUser) {
-            $adminUser->assignRole('admin');
+            $adminUser->assignRole('kasir');
         }
 
         if ($pemilikUser) {
-            $pemilikUser->assignRole('pemilik');
+            $pemilikUser->assignRole('admin');
         }
     }
 }
