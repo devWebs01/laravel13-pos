@@ -39,9 +39,10 @@ class Product extends Model
             return $this->image;
         }
 
-        // Cloudinary public ID (no file extension, not a URL)
         if (! pathinfo($this->image, PATHINFO_EXTENSION)) {
-            return app(CloudinaryService::class)->getUrl($this->image);
+            $url = app(CloudinaryService::class)->getUrl($this->image);
+            if ($url) return $url;
+            return asset('images/product-default.svg');
         }
 
         if (file_exists(storage_path('app/public/'.$this->image))) {

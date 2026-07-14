@@ -4,56 +4,69 @@ namespace App\Services;
 
 use Cloudinary\Cloudinary;
 use Cloudinary\Transformation\Transformation;
+use Illuminate\Support\Facades\Log;
 
 class CloudinaryService
 {
-    private Cloudinary $client;
+    private ?Cloudinary $client = null;
 
     public function __construct()
     {
-        $this->client = new Cloudinary(config('cloudinary.cloud_url'));
+        $url = config('cloudinary.cloud_url');
+        if ($url) {
+            try {
+                $this->client = new Cloudinary($url);
+            } catch (\Throwable $e) {
+                Log::warning('Cloudinary config failed: '.$e->getMessage());
+            }
+        }
     }
 
-    public function upload(string $filePath, ?string $folder = 'products'): array
+    public function ready(): bool
     {
-        $options = [];
+        return $this->client !== null;
+    }
 
-        if ($folder) {
-            $options['folder'] = $folder;
+    public function upload(string $filePath, ?string $folder = 'products'): ?array
+    {
+        if (! $this->ready()) {
+            return null;
         }
 
-        $options['transformation'] = (new Transformation())
-            ->quality('auto')
-            ->format('auto');
-
-        $result = $this->client->uploadApi()->upload($filePath, $options);
-
-        return [
-            'public_id' => $result['public_id'],
-            'url' => $result['secure_url'],
-        ];
+        try {
+            $options = ['folder' => $folder, 'transformation' => (new Transformation())->quality('auto')->format('auto')];
+            $result = $this->client->uploadApi()->upload($filePath, $options);
+            return ['public_id' => $result['public_id'], 'url' => $result['secure_url']];
+        } catch (\Throwable $e) {
+            Log::error('Cloudinary upload failed: '.$e->getMessage());
+            return null;
+        }
     }
 
     public function delete(string $publicId): void
     {
-        $this->client->uploadApi()->destroy($publicId);
+        if (! $this->ready()) return;
+        try {
+            $this->client->uploadApi()->destroy($publicId);
+        } catch (\Throwable $e) {
+            Log::warning('Cloudinary delete failed: '.$e->getMessage());
+        }
     }
 
-    public function getUrl(string $publicId): string
+    public function getUrl(string $publicId): ?string
     {
-        return $this->client->image($publicId)->toUrl();
+        if (! $this->ready()) return null;
+        try {
+            return $this->client->image($publicId)->toUrl();
+        } catch (\Throwable $e) {
+            Log::warning('Cloudinary URL generation failed: '.$e->getMessage());
+            return null;
+        }
     }
 
     public function isCloudinaryId(string $value): bool
     {
-        if (empty($value)) {
-            return false;
-        }
-
-        if (str_starts_with($value, 'http')) {
-            return false;
-        }
-
-        return !pathinfo($value, PATHINFO_EXTENSION);
+        if (empty($value) || str_starts_with($value, 'http')) return false;
+        return ! pathinfo($value, PATHINFO_EXTENSION);
     }
 }

@@ -77,7 +77,11 @@ $save = function () {
         $uploaded = app(CloudinaryService::class)->upload(
             $this->image->getRealPath()
         );
-        $validated['image'] = $uploaded['public_id'];
+        if ($uploaded) {
+            $validated['image'] = $uploaded['public_id'];
+        } else {
+            unset($validated['image']);
+        }
     } else {
         unset($validated['image']);
     }
