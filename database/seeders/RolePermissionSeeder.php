@@ -20,7 +20,7 @@ class RolePermissionSeeder extends Seeder
             'permissions' => ['view', 'create', 'edit', 'delete'],
             'products' => ['view', 'create', 'edit', 'delete'],
             'categories' => ['view', 'create', 'edit', 'delete'],
-            'transactions' => ['view', 'create', 'edit', 'delete'],
+            'penjualan' => ['view', 'create', 'edit', 'delete'],
             'reports' => ['view'],
             'settings' => ['store', 'profile', 'security'],
         ];
@@ -35,15 +35,15 @@ class RolePermissionSeeder extends Seeder
             }
         }
 
-        $kasir = Role::findOrCreate('kasir');
-        $kasir->syncPermissions($permissions);
-
         $admin = Role::findOrCreate('admin');
-        $admin->syncPermissions(
+        $admin->syncPermissions($permissions);
+
+        $kasir = Role::findOrCreate('kasir');
+        $kasir->syncPermissions(
             $permissions->filter(fn ($p) =>
                 str($p)->startsWith('products.')
                 || str($p)->startsWith('categories.')
-                || $p === 'transactions.view'
+                || str($p)->startsWith('penjualan.')
                 || $p === 'reports.view'
             )
         );

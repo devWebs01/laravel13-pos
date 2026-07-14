@@ -19,9 +19,9 @@
                     {{ __('Dashboard') }}
                 </flux:sidebar.item>
 
-                @can('transactions.view')
+                @can('penjualan.view')
                 <flux:sidebar.item icon="document-text" href="{{ route('transactions.index') }}">
-                    {{ __('Transactions') }}
+                    {{ __('Penjualan') }}
                 </flux:sidebar.item>
                 @endcan
 
