@@ -17,13 +17,19 @@ class DatabaseSeeder extends Seeder
             'name' => 'Admin Toko',
             'email' => 'admin@testing.com',
         ]);
-        $admin->assignRole('kasir');
+        $admin->assignRole('admin');
 
-        $pemilik = User::factory()->create([
-            'name' => 'Pemilik Toko',
-            'email' => 'pemilik@testing.com',
+        $kasir = User::factory()->create([
+            'name' => 'Kasir Toko',
+            'email' => 'kasir@testing.com',
         ]);
-        $pemilik->assignRole('admin');
+        $kasir->assignRole('kasir');
+
+        $superadmin = User::factory()->create([
+            'name' => 'Super Admin',
+            'email' => 'superadmin@testing.com',
+        ]);
+        $superadmin->assignRole('superadmin');
 
         $this->call([
             CategorySeeder::class,

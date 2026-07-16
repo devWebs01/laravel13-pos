@@ -24,7 +24,7 @@ state([
 
 $users = computed(function () {
     return User::query()
-        ->whereNot('email', 'admin@testing.com')
+        ->whereNot('email', 'superadmin@testing.com')
         ->orWhereNot('name', 'Admin POS')
         ->where(function ($query) {
             $query->where('name', 'like', '%' . $this->search . '%')

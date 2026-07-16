@@ -35,8 +35,16 @@ class RolePermissionSeeder extends Seeder
             }
         }
 
+        $superadmin = Role::findOrCreate('superadmin');
+        $superadmin->syncPermissions($permissions);
+
         $admin = Role::findOrCreate('admin');
-        $admin->syncPermissions($permissions);
+        $admin->syncPermissions(
+            $permissions->filter(fn ($p) =>
+                ! str($p)->startsWith('roles.')
+                && ! str($p)->startsWith('permissions.')
+            )
+        );
 
         $kasir = Role::findOrCreate('kasir');
         $kasir->syncPermissions(
@@ -48,8 +56,13 @@ class RolePermissionSeeder extends Seeder
             )
         );
 
+        $superadminUser = User::where('email', 'superadmin@testing.com')->first();
         $adminUser = User::where('email', 'admin@testing.com')->first();
         $pemilikUser = User::where('email', 'pemilik@testing.com')->first();
+
+        if ($superadminUser) {
+            $superadminUser->assignRole('superadmin');
+        }
 
         if ($adminUser) {
             $adminUser->assignRole('admin');

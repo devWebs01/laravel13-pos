@@ -22,7 +22,7 @@ state([
     'selectedRoles' => [],
 ]);
 
-$roles = computed(fn() => Role::whereNot('name', 'kasir')->get());
+$roles = computed(fn() => Role::whereNotIn('name', ['kasir', 'superadmin'])->get());
 
 $save = function () {
     $this->validate([
