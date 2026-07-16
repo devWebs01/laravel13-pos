@@ -178,7 +178,7 @@ $save = function () {
             @endphp
 
             <flux:breadcrumbs>
-                <flux:breadcrumbs.item href="#">{{ __('Home') }}</flux:breadcrumbs.item>
+                <flux:breadcrumbs.item href="/dashboard">{{ __('Home') }}</flux:breadcrumbs.item>
                 <flux:breadcrumbs.item href="{{ route('transactions.index') }}">{{ __('Transactions') }}
                 </flux:breadcrumbs.item>
                 <flux:breadcrumbs.item>{{ __('New Transaction') }}</flux:breadcrumbs.item>

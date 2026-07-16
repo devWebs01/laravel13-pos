@@ -107,7 +107,7 @@ $clearErrors = function () {
     @volt
         <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl">
             <flux:breadcrumbs>
-                <flux:breadcrumbs.item href="dashboard">{{ __('Dashboard') }}</flux:breadcrumbs.item>
+                <flux:breadcrumbs.item href="/dashboard">{{ __('Dashboard') }}</flux:breadcrumbs.item>
                 <flux:breadcrumbs.item href="{{ route('products.index') }}">{{ __('Products') }}</flux:breadcrumbs.item>
                 <flux:breadcrumbs.item>{{ __('Create') }}</flux:breadcrumbs.item>
             </flux:breadcrumbs>

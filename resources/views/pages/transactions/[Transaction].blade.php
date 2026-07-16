@@ -182,7 +182,7 @@ $paymentMethods = computed(function () {
     @volt
     <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl">
         <flux:breadcrumbs>
-            <flux:breadcrumbs.item href="#">{{ __('Home') }}</flux:breadcrumbs.item>
+            <flux:breadcrumbs.item href="/dashboard">{{ __('Home') }}</flux:breadcrumbs.item>
             <flux:breadcrumbs.item href="{{ route('transactions.index') }}">{{ __('Transactions') }}
             </flux:breadcrumbs.item>
             <flux:breadcrumbs.item>{{ $transaction->invoice_number }}</flux:breadcrumbs.item>
