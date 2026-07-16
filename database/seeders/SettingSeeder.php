@@ -17,6 +17,7 @@ class SettingSeeder extends Seeder
             'store_address' => 'Lorong Gotong Royong, Selamat, Kec. Telanaipura, Kota Jambi, Jambi',
             'store_phone' => '021-1234567',
             'store_email' => 'contact@nw.kopi.com',
+            'store_logo' => 'logo/logo-kopi.png',
             'receipt_footer' => 'Terima kasih telah berbelanja di toko kami!',
         ]);
     }

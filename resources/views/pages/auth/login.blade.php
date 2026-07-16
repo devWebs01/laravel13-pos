@@ -1,5 +1,12 @@
 <x-layouts::auth title="Masuk">
     <div class="flex flex-col gap-6">
+        @php $setting = \App\Models\Setting::first(); @endphp
+        @if ($setting?->logo_url)
+            <div class="flex justify-center">
+                <img src="{{ $setting->logo_url }}" alt="{{ $setting->store_name }}" class="h-16 w-16 rounded-xl object-cover">
+            </div>
+        @endif
+
         <x-auth-header title="Masuk ke akun Anda" description="Masukkan email dan kata sandi Anda di bawah untuk masuk" />
 
         <x-auth-session-status class="text-center" :status="session('status')" />

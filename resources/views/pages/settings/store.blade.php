@@ -2,11 +2,15 @@
 
 use App\Models\Setting;
 use Flux\Flux;
+use Livewire\WithFileUploads;
 
 use function Laravel\Folio\middleware;
 use function Laravel\Folio\name;
 use function Livewire\Volt\state;
 use function Livewire\Volt\mount;
+use function Livewire\Volt\uses;
+
+uses(WithFileUploads::class);
 
 name('settings.store');
 middleware('auth');
@@ -17,6 +21,7 @@ state([
     'store_address' => '',
     'store_phone' => '',
     'store_email' => '',
+    'store_logo' => null,
     'receipt_footer' => '',
 ]);
 
@@ -37,6 +42,7 @@ $save = function () {
         'store_address' => 'nullable|string',
         'store_phone' => 'nullable|string|max:50',
         'store_email' => 'nullable|email|max:255',
+        'store_logo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         'receipt_footer' => 'nullable|string',
     ]);
 
@@ -50,6 +56,11 @@ $save = function () {
     $setting->store_phone = $this->store_phone;
     $setting->store_email = $this->store_email;
     $setting->receipt_footer = $this->receipt_footer;
+
+    if ($this->store_logo) {
+        $setting->store_logo = $this->store_logo->store('logo', 'public');
+    }
+
     $setting->save();
 
     Flux::toast(variant: 'success', text: __('Settings updated.'));
@@ -81,6 +92,22 @@ $save = function () {
                 <div class="grid grid-cols-2 gap-4">
                     <flux:input wire:model="store_phone" :label="__('Store Phone')" />
                     <flux:input wire:model="store_email" type="email" :label="__('Store Email')" />
+                </div>
+
+                <div>
+                    <flux:label>{{ __('Store Logo') }}</flux:label>
+                    <input type="file" wire:model="store_logo" accept="image/jpeg,image/png,image/jpg,image/webp"
+                        class="mt-1 block w-full text-sm text-zinc-500 file:me-3 file:rounded-lg file:border-0 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white file:shadow-xs file:bg-zinc-800 hover:file:bg-zinc-700 dark:file:bg-white/10 dark:hover:file:bg-white/20 dark:file:text-zinc-200">
+                    @error('store_logo')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                    @php $settingLogo = \App\Models\Setting::first()?->logo_url; @endphp
+                    @if ($settingLogo)
+                        <div class="mt-2 flex items-center gap-3">
+                            <img src="{{ $settingLogo }}" alt="Current logo" class="h-10 w-10 rounded-lg border object-cover">
+                            <span class="text-xs text-zinc-400">{{ __('Current logo') }}</span>
+                        </div>
+                    @endif
                 </div>
 
                 <flux:textarea wire:model="receipt_footer" :label="__('Receipt Footer')"
