@@ -30,6 +30,9 @@ state([
     'detailProduct' => null,
     'showDeleteModal' => false,
     'deletingProductId' => null,
+    'showStockOpnameModal' => false,
+    'stockOpnameProduct' => null,
+    'stockOpnameQty' => 0,
 ]);
 
 $sort = function ($column) {
@@ -79,6 +82,30 @@ $confirmDelete = function ($id) {
 $viewProduct = function ($id) {
     $this->detailProduct = Product::with('category')->findOrFail($id);
     $this->showDetailModal = true;
+};
+
+$openStockOpname = function ($id) {
+    $this->stockOpnameProduct = Product::findOrFail($id);
+    $this->stockOpnameQty = $this->stockOpnameProduct->stock;
+    $this->showStockOpnameModal = true;
+};
+
+$submitStockOpname = function () {
+    $product = $this->stockOpnameProduct;
+    if (! $product) return;
+
+    $qty = (int) $this->stockOpnameQty;
+    if ($qty < 0) {
+        Flux::toast(variant: 'danger', text: __('Stock cannot be negative.'));
+        return;
+    }
+
+    $product->update(['stock' => $qty]);
+
+    $this->showStockOpnameModal = false;
+    $this->stockOpnameProduct = null;
+
+    Flux::toast(variant: 'success', text: __('Stock updated.'));
 };
 
 $delete = function () {
@@ -273,6 +300,9 @@ $delete = function () {
                                                 href="{{ route('products.edit', ['product' => $product->id]) }}">
                                                 {{ __('Edit') }}
                                             </flux:menu.item>
+                                            <flux:menu.item icon="clipboard" wire:click="openStockOpname({{ $product->id }})">
+                                                {{ __('Stock Opname') }}
+                                            </flux:menu.item>
                                             <flux:menu.separator />
                                             <flux:menu.item icon="trash" variant="danger"
                                                 wire:click="confirmDelete({{ $product->id }})">
@@ -383,6 +413,40 @@ $delete = function () {
                             <flux:button variant="filled">{{ __('Cancel') }}</flux:button>
                         </flux:modal.close>
                         <flux:button variant="danger" type="submit">{{ __('Delete') }}</flux:button>
+                    </div>
+                </form>
+            </flux:modal>
+            {{-- Stock Opname Modal --}}
+            <flux:modal wire:model.self="showStockOpnameModal" class="max-w-lg">
+                <form wire:submit="submitStockOpname" class="space-y-6">
+                    <div class="flex items-start gap-4">
+                        <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+                            <flux:icon name="clipboard" variant="micro" class="text-blue-600" />
+                        </div>
+                        <div>
+                            <flux:heading size="lg">{{ __('Stock Opname') }}</flux:heading>
+                            <flux:subheading>
+                                {{ $stockOpnameProduct?->name }}
+                                @if ($stockOpnameProduct?->is_unlimited_stock)
+                                    <span class="text-amber-500">({{ __('Tanpa Stok') }})</span>
+                                @endif
+                            </flux:subheading>
+                        </div>
+                    </div>
+
+                    <flux:input
+                        wire:model="stockOpnameQty"
+                        type="number"
+                        min="0"
+                        :label="__('Stock Quantity')"
+                        :disabled="$stockOpnameProduct?->is_unlimited_stock"
+                    />
+
+                    <div class="flex justify-end gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-700">
+                        <flux:modal.close>
+                            <flux:button variant="filled">{{ __('Cancel') }}</flux:button>
+                        </flux:modal.close>
+                        <flux:button variant="primary" type="submit">{{ __('Save') }}</flux:button>
                     </div>
                 </form>
             </flux:modal>
