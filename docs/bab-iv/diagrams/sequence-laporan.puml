@@ -2,7 +2,7 @@
 !theme plain
 skinparam backgroundColor #FFFFFF
 
-actor Pemilik
+actor Admin
 participant Browser
 participant "Livewire\nReportComponent" as Livewire
 participant "Transaction\nModel" as TrxModel
@@ -11,27 +11,27 @@ participant "PDF\nGenerator" as PDF
 participant "Excel\nExporter" as Excel
 database MySQL
 
-Pemilik -> Browser: Akses halaman laporan
+Admin -> Browser: Akses halaman laporan
 Browser -> Livewire: Mount component
 Livewire --> Browser: Render report interface\n+ filter form
 
-Pemilik -> Browser: Pilih jenis laporan\n(Penjualan/Stok/Terlaris)
+Admin -> Browser: Pilih jenis laporan\n(Penjualan/Stok/Terlaris)
 Browser -> Livewire: wire:model="reportType"
 Livewire --> Browser: Update form sesuai tipe
 
-Pemilik -> Browser: Set date range\n(start_date, end_date)
+Admin -> Browser: Set date range\n(start_date, end_date)
 Browser -> Livewire: wire:model="dateRange"
 
-Pemilik -> Browser: Pilih filter kategori (optional)
+Admin -> Browser: Pilih filter kategori (optional)
 Browser -> Livewire: wire:model="categoryId"
 
-Pemilik -> Browser: Klik "Generate Report"
+Admin -> Browser: Klik "Generate Report"
 Browser -> Livewire: wire:click="generateReport()"
 
 Livewire -> Livewire: Validate date range
 alt Date range invalid
   Livewire --> Browser: Emit validation error
-  Browser --> Pemilik: Tampilkan error message
+  Browser --> Admin: Tampilkan error message
 else Date range valid
   
   alt Report Type: Penjualan
@@ -59,13 +59,13 @@ else Date range valid
   
   Livewire -> Livewire: Format data for display
   Livewire --> Browser: Render table + chart
-  Browser --> Pemilik: Tampilkan hasil laporan
+  Browser --> Admin: Tampilkan hasil laporan
 end
 
-Pemilik -> Browser: Review hasil laporan
+Admin -> Browser: Review hasil laporan
 
-alt Pemilik ingin export
-  Pemilik -> Browser: Pilih format export\n(PDF / Excel)
+alt Admin ingin export
+  Admin -> Browser: Pilih format export\n(PDF / Excel)
   
   alt Format: PDF
     Browser -> Livewire: wire:click="exportPDF()"
@@ -79,7 +79,7 @@ alt Pemilik ingin export
     PDF -> PDF: Add timestamp
     PDF --> Livewire: PDF binary
     Livewire --> Browser: Download response\nContent-Type: application/pdf
-    Browser --> Pemilik: Download file\n"laporan-{type}-{date}.pdf"
+    Browser --> Admin: Download file\n"laporan-{type}-{date}.pdf"
     
   else Format: Excel
     Browser -> Livewire: wire:click="exportExcel()"
@@ -94,7 +94,7 @@ alt Pemilik ingin export
     Excel -> Excel: Freeze header row
     Excel --> Livewire: Excel binary
     Livewire --> Browser: Download response\nContent-Type: application/vnd.ms-excel
-    Browser --> Pemilik: Download file\n"laporan-{type}-{date}.xlsx"
+    Browser --> Admin: Download file\n"laporan-{type}-{date}.xlsx"
   end
   
   Livewire -> MySQL: INSERT INTO activity_log\n(user_id, action, description)

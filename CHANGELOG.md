@@ -48,7 +48,7 @@ Dibangun dengan Laravel 13, Livewire 4, Flux UI, dan Volt.
 - Autentikasi email + password
 - Verifikasi email
 - Reset kata sandi
-- Dua peran default: admin (full akses) dan pemilik (produk, kategori, transaksi, laporan)
+- Dua peran default: admin (full akses) dan kasir (produk, kategori, transaksi, laporan)
 
 ### Keamanan & Akses
 - Role-Based Access Control (RBAC) dengan Spatie Permission
@@ -92,7 +92,7 @@ Dibangun dengan Laravel 13, Livewire 4, Flux UI, dan Volt.
 | Peran | Email | Password |
 |-------|-------|----------|
 | Admin | admin@testing.com | password |
-| Pemilik | pemilik@testing.com | password |
+| Admin | pemilik@testing.com | password |
 
 **Data:**
 - 5 kategori produk

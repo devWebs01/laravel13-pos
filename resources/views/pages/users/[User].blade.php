@@ -55,7 +55,7 @@ $save = function () {
 
     Flux::toast(variant: 'success', text: __('User updated.'));
 
-    $this->redirect('/users', wire: true);
+    $this->redirect('/users');
 };
 
 ?>

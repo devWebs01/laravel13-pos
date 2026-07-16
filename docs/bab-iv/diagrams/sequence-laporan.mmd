@@ -1,5 +1,5 @@
 sequenceDiagram
-  actor Pemilik
+  actor Admin
   participant Browser
   participant Livewire as Livewire ReportComponent
   participant TrxModel as Transaction Model
@@ -7,14 +7,14 @@ sequenceDiagram
   participant PDF as PDF Generator
   participant XLSX as Excel Generator
 
-  Pemilik->>Browser: Akses halaman laporan
+  Admin->>Browser: Akses halaman laporan
   Browser->>Livewire: Mount ReportComponent
   Livewire-->>Browser: Render halaman laporan
 
-  Pemilik->>Browser: Pilih jenis laporan
-  Pemilik->>Browser: Set date range (start_date, end_date)
-  Pemilik->>Browser: Pilih filter kategori (opsional)
-  Pemilik->>Browser: Klik Generate Report
+  Admin->>Browser: Pilih jenis laporan
+  Admin->>Browser: Set date range (start_date, end_date)
+  Admin->>Browser: Pilih filter kategori (opsional)
+  Admin->>Browser: Klik Generate Report
   Browser->>Livewire: wire:click generateReport(filter)
   Livewire->>Livewire: validateDateRange()
   alt Date range tidak valid
@@ -33,9 +33,9 @@ sequenceDiagram
     Livewire-->>Browser: Tampilkan hasil laporan + grafik
   end
 
-  Pemilik->>Browser: Review hasil laporan
-  alt Pemilik ingin export
-    Pemilik->>Browser: Pilih format export (PDF/Excel)
+  Admin->>Browser: Review hasil laporan
+  alt Admin ingin export
+    Admin->>Browser: Pilih format export (PDF/Excel)
     alt Format PDF
       Browser->>Livewire: wire:click exportPDF()
       Livewire->>PDF: generate(laporanData)

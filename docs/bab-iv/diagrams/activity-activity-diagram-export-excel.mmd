@@ -1,6 +1,6 @@
 flowchart TD
   start((Mulai))
-  A_A["Admin: Pada halaman laporan, klik Export Excel"]
+  A_A["Kasir: Pada halaman laporan, klik Export Excel"]
   start --> A_A
   S_A["Sistem: Generate Excel dengan PhpSpreadsheet"]
   A_A --> S_A
@@ -16,8 +16,8 @@ flowchart TD
   S_E --> S_F
   S_G["Sistem: Download file ke browser"]
   S_F --> S_G
-  A_B["Admin: Simpan file Excel"]
+  A_B["Kasir: Simpan file Excel"]
   S_G --> A_B
-  A_C["Admin: Buka dan review file"]
+  A_C["Kasir: Buka dan review file"]
   A_B --> A_C
   end_success([Selesai])

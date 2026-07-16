@@ -5,7 +5,7 @@ skinparam backgroundColor #FFFFFF
 left to right direction
 
 actor "Admin" as admin
-actor "Pemilik" as pemilik
+actor "Kasir" as pemilik
 
 rectangle "Sistem POS DW" {
   
@@ -51,7 +51,7 @@ rectangle "Sistem POS DW" {
   }
 }
 
-' Admin relationships
+' Kasir relationships
 admin --> UC01
 admin --> UC02
 admin --> UC03
@@ -76,7 +76,7 @@ admin --> UC21
 admin --> UC22
 admin --> UC23
 
-' Pemilik relationships
+' Kasir relationships
 pemilik --> UC01
 pemilik --> UC02
 pemilik --> UC03

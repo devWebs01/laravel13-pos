@@ -1,12 +1,12 @@
 flowchart TD
   start((Mulai))
-  A_A["Pemilik: Pilih menu Riwayat Transaksi"]
+  A_A["Admin: Pilih menu Riwayat Transaksi"]
   start --> A_A
   S_A["Sistem: Tampilkan halaman riwayat transaksi"]
   A_A --> S_A
-  A_B["Pemilik: Filter berdasarkan tanggal (opsional)"]
+  A_B["Admin: Filter berdasarkan tanggal (opsional)"]
   S_A --> A_B
-  A_C["Pemilik: Klik tombol Cari"]
+  A_C["Admin: Klik tombol Cari"]
   A_B --> A_C
   S_B["Sistem: Query transaksi dari database"]
   A_C --> S_B
@@ -15,6 +15,6 @@ flowchart TD
   D_A -->|Tidak| E_A["Sistem: Tampilkan pesan tidak ada data"]
   E_A --> end_empty([Selesai])
   D_A -->|Ya| S_C["Sistem: Tampilkan daftar transaksi"]
-  S_C --> A_D["Pemilik: Klik transaksi untuk lihat detail"]
+  S_C --> A_D["Admin: Klik transaksi untuk lihat detail"]
   A_D --> S_D["Sistem: Tampilkan detail transaksi"]
   S_D --> end_success([Selesai])

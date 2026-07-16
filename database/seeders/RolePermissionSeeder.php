@@ -52,11 +52,11 @@ class RolePermissionSeeder extends Seeder
         $pemilikUser = User::where('email', 'pemilik@testing.com')->first();
 
         if ($adminUser) {
-            $adminUser->assignRole('kasir');
+            $adminUser->assignRole('admin');
         }
 
         if ($pemilikUser) {
-            $pemilikUser->assignRole('admin');
+            $pemilikUser->assignRole('kasir');
         }
     }
 }

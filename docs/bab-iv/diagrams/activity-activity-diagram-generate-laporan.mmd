@@ -1,18 +1,18 @@
 flowchart TD
   start((Mulai))
-  A_A["Admin: Pilih menu Laporan"]
+  A_A["Kasir: Pilih menu Laporan"]
   start --> A_A
   S_A["Sistem: Tampilkan halaman laporan"]
   A_A --> S_A
-  A_B["Admin: Pilih jenis laporan (Penjualan/Stok/Terlaris)"]
+  A_B["Kasir: Pilih jenis laporan (Penjualan/Stok/Terlaris)"]
   S_A --> A_B
   S_B["Sistem: Tampilkan form filter"]
   A_B --> S_B
-  A_C["Admin: Set periode tanggal"]
+  A_C["Kasir: Set periode tanggal"]
   S_B --> A_C
-  A_D["Admin: Pilih filter kategori/produk (opsional)"]
+  A_D["Kasir: Pilih filter kategori/produk (opsional)"]
   A_C --> A_D
-  A_E["Admin: Klik Generate Report"]
+  A_E["Kasir: Klik Generate Report"]
   A_D --> A_E
   S_C["Sistem: Validasi input"]
   A_E --> S_C
@@ -26,5 +26,5 @@ flowchart TD
   E_B --> end_empty([Selesai])
   D_B -->|Ya| S_E["Sistem: Format data dan tampilkan tabel"]
   S_E --> S_F["Sistem: Tampilkan grafik dan summary"]
-  S_F --> A_F["Admin: Review hasil laporan"]
+  S_F --> A_F["Kasir: Review hasil laporan"]
   A_F --> end_success([Selesai])

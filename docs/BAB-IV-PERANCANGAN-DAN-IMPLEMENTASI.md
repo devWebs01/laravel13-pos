@@ -64,7 +64,7 @@ Sistem POS DW mencakup fitur-fitur utama:
 1. **Autentikasi & Otorisasi**
    - Login dengan email & password
    - Two-Factor Authentication (2FA)
-   - Role-based access control (Admin, Pemilik)
+   - Role-based access control (Admin, Admin)
    - Permission management
 
 2. **Manajemen Master Data**

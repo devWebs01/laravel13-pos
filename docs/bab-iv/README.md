@@ -42,7 +42,7 @@ docs/
 | `flowchart-sistem.mmd` | Flowchart | 1 | Alur sistem keseluruhan |
 | `usecase-diagram.mmd` | Use Case | 1 | 23 use case, 2 aktor |
 | `activity-*.mmd` (Admin) | Activity | 20 | Login, Logout, CRUD Kategori, CRUD Produk, Transaksi, Riwayat, CRUD User, Role, Settings, Profil, Password, Laporan, Export |
-| `activity-*.mmd` (Pemilik) | Activity | 14 | Login, Logout, CRUD Kategori, CRUD Produk, Riwayat, Laporan, Export, Profil, Password |
+| `activity-*.mmd` (Admin) | Activity | 14 | Login, Logout, CRUD Kategori, CRUD Produk, Riwayat, Laporan, Export, Profil, Password |
 | `sequence-*.mmd` | Sequence | 3 | Login, Transaksi, Laporan |
 | `class-diagram.mmd` | Class | 1 | 8 class model + relasi |
 | `erd.mmd` | ERD | 1 | 12 entitas database |

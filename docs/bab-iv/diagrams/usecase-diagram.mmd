@@ -1,6 +1,6 @@
 flowchart LR
-  Admin["👤 Admin"]
-  Pemilik["👤 Pemilik"]
+  Kasir["👤 Kasir"]
+  Kasir["👤 Kasir"]
 
   subgraph Autentikasi
     UC01(("UC-01: Login"))
@@ -43,16 +43,16 @@ flowchart LR
     UC23(("UC-23: Ubah Password"))
   end
 
-  Admin --- UC01 & UC02 & UC03 & UC04 & UC05 & UC06 & UC07
-  Admin --- UC08 & UC09 & UC10 & UC11 & UC12
-  Admin --- UC13 & UC14 & UC15 & UC16 & UC17
-  Admin --- UC18 & UC19 & UC20
-  Admin --- UC21 & UC22 & UC23
+  Kasir --- UC01 & UC02 & UC03 & UC04 & UC05 & UC06 & UC07
+  Kasir --- UC08 & UC09 & UC10 & UC11 & UC12
+  Kasir --- UC13 & UC14 & UC15 & UC16 & UC17
+  Kasir --- UC18 & UC19 & UC20
+  Kasir --- UC21 & UC22 & UC23
 
-  Pemilik --- UC01 & UC02 & UC03
-  Pemilik --- UC12
-  Pemilik --- UC13 & UC14 & UC15 & UC16 & UC17
-  Pemilik --- UC22 & UC23
+  Kasir --- UC01 & UC02 & UC03
+  Kasir --- UC12
+  Kasir --- UC13 & UC14 & UC15 & UC16 & UC17
+  Kasir --- UC22 & UC23
 
   UC08 -.->|include| UC09
   UC08 -.->|include| UC10
