@@ -3,6 +3,13 @@
 
 <head>
     @include('partials.head')
+    <style>
+        :fullscreen [data-flux-sidebar-collapse] button,
+        :-webkit-full-screen [data-flux-sidebar-collapse] button {
+            opacity: 1 !important;
+            position: static !important;
+        }
+    </style>
 </head>
 
 <body class="min-h-screen bg-white dark:bg-zinc-800">
