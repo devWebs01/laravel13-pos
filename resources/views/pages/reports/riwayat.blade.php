@@ -95,7 +95,10 @@ $summary = computed(function () {
                     <flux:input wire:model.live="to_date" type="date" :label="__('To')" />
                 </div>
                 <div class="w-48">
-                    <flux:select wire:model.live="payment_filter" :label="__('Payment')" placeholder="{{ __('All Methods') }}">
+                    <flux:select wire:model.live="payment_filter" :label="__('Payment')">
+                        <flux:select.option value="">
+                            Semua
+                        </flux:select.option>
                         @foreach ($methodLabels as $key => $label)
                             <flux:select.option value="{{ $key }}">{{ $label }}</flux:select.option>
                         @endforeach

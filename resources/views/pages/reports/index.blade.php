@@ -128,10 +128,10 @@ $categoryData = computed(function () {
             {{-- Date Range Filter --}}
             <div
                 class="flex flex-wrap items-end gap-4 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
-                <div class="w-full">
+                <div class="w-full sm:w-48">
                     <flux:input wire:model.live="from_date" type="date" :label="__('From')" />
                 </div>
-                <div class="w-full">
+                <div class="w-full sm:w-48">
                     <flux:input wire:model.live="to_date" type="date" :label="__('To')" />
                 </div>
                 <flux:spacer />
@@ -368,7 +368,6 @@ $categoryData = computed(function () {
 
                     // Handle Updates secara reaktif
                     Livewire.on('charts-update', (event) => {
-                        // Di Livewire 3, 'event' langsung berisi object yang kita kirim dari PHP
                         const data = event;
 
                         dailyRevenueChart.updateOptions({

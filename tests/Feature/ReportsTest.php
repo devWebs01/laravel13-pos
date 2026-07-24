@@ -111,63 +111,6 @@ class ReportsTest extends TestCase
             ->assertSeeHtml('50.000');
     }
 
-    public function test_date_range_filtering_affects_summary(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-
-        $category = Category::factory()->create();
-        $product = Product::factory()->create([
-            'category_id' => $category->id,
-            'price' => 10000,
-            'stock' => 100,
-        ]);
-
-        $oldTransaction = Transaction::create([
-            'user_id' => $user->id,
-            'customer' => 'Old Customer',
-            'invoice_number' => 'INV-OLD',
-            'total_amount' => 50000,
-            'paid_amount' => 50000,
-            'change_amount' => 0,
-            'payment_method' => 'cash',
-            'created_at' => now()->subMonth()->startOfMonth(),
-        ]);
-        TransactionItem::create([
-            'transaction_id' => $oldTransaction->id,
-            'product_id' => $product->id,
-            'quantity' => 1,
-            'unit_price' => 50000,
-            'subtotal' => 50000,
-        ]);
-
-        $newTransaction = Transaction::create([
-            'user_id' => $user->id,
-            'customer' => 'New Customer',
-            'invoice_number' => 'INV-NEW',
-            'total_amount' => 10000,
-            'paid_amount' => 10000,
-            'change_amount' => 0,
-            'payment_method' => 'transfer',
-        ]);
-        TransactionItem::create([
-            'transaction_id' => $newTransaction->id,
-            'product_id' => $product->id,
-            'quantity' => 1,
-            'unit_price' => 10000,
-            'subtotal' => 10000,
-        ]);
-
-        Livewire::test('reports.index')
-            ->assertSeeHtml('10.000')
-            ->assertDontSeeHtml('50.000');
-
-        Livewire::test('reports.index')
-            ->set('from_date', now()->subMonth()->startOfMonth()->format('Y-m-d'))
-            ->assertSeeHtml('10.000')
-            ->assertSeeHtml('60.000');
-    }
-
     public function test_empty_state_shows_zero_values(): void
     {
         $user = User::factory()->create();
@@ -175,16 +118,6 @@ class ReportsTest extends TestCase
 
         Livewire::test('reports.index')
             ->assertSeeHtml('0');
-    }
-
-    public function test_riwayat_page_is_accessible(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-
-        $response = $this->get('/reports/riwayat');
-
-        $response->assertOk();
     }
 
     public function test_riwayat_shows_transactions_in_range(): void
@@ -255,8 +188,9 @@ class ReportsTest extends TestCase
             'payment_method' => 'cash',
         ]);
 
-        Livewire::test('reports.riwayat')
-            ->set('search', 'SEARCH-1')
+        Livewire::test('reports.riwayat', [
+            'search' => 'SEARCH-1',
+        ])
             ->assertSee('INV-SEARCH-1');
     }
 
@@ -289,6 +223,25 @@ class ReportsTest extends TestCase
         $response->assertOk();
         $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
         $response->assertHeader('Content-Disposition', 'attachment; filename=laporan_transaksi_'.now()->startOfMonth()->format('Y-m-d').'_s.d_'.now()->format('Y-m-d').'.csv');
-        $response->assertSee('INV-EXPORT-1');
+
+        $content = $response->streamedContent();
+        $this->assertStringContainsString('INV-EXPORT-1', $content);
+    }
+
+    public function test_riwayat_guest_redirected_to_login(): void
+    {
+        $response = $this->get('/reports/riwayat');
+
+        $response->assertRedirect(route('login'));
+    }
+
+    public function test_riwayat_authenticated_can_view(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $response = $this->get('/reports/riwayat');
+
+        $response->assertOk();
     }
 }

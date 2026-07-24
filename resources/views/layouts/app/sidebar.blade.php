@@ -26,12 +26,25 @@
                 @endcan
 
                 @can('reports.view')
-                <flux:sidebar.item icon="chart-bar-square" href="{{ route('reports.index') }}">
-                    {{ __('Laporan') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="clipboard-document-list" href="/reports/riwayat">
-                    {{ __('Riwayat Transaksi') }}
-                </flux:sidebar.item>
+                <flux:sidebar.group
+                    :heading="__('Laporan')"
+                    icon="chart-bar-square"
+                    expandable
+                    :expanded="request()->routeIs('reports.index') || request()->routeIs('reports.riwayat') || request()->is('reports/riwayat')"
+                >
+                    <flux:sidebar.item
+                        icon="chart-bar-square"
+                        href="{{ route('reports.index') }}"
+                        :current="request()->routeIs('reports.index')">
+                        {{ __('Analitik') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item
+                        icon="clock"
+                        href="/reports/riwayat"
+                        :current="request()->routeIs('reports.riwayat')">
+                        {{ __('Riwayat Transaksi') }}
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
                 @endcan
             </flux:sidebar.group>
 
