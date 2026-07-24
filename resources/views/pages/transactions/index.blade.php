@@ -79,24 +79,24 @@ $delete = function () {
     Flux::toast(variant: 'success', text: __('Transaction deleted.'));
 };
 
-$methodLabels = [
-    'cash' => 'Tunai',
-    'transfer' => 'Transfer',
-    'debit_card' => 'Kartu Debit',
-    'credit_card' => 'Kartu Kredit',
-];
-
-$methodColors = [
-    'cash' => 'green',
-    'transfer' => 'blue',
-    'debit_card' => 'purple',
-    'credit_card' => 'orange',
-];
-
 ?>
 
 <x-layouts::app :title="__('Transactions')">
     @volt
+        @php
+            $methodLabels = [
+                'cash' => 'Tunai',
+                'transfer' => 'Transfer',
+                'debit_card' => 'Kartu Debit',
+                'credit_card' => 'Kartu Kredit',
+            ];
+            $methodColors = [
+                'cash' => 'green',
+                'transfer' => 'blue',
+                'debit_card' => 'purple',
+                'credit_card' => 'orange',
+            ];
+        @endphp
         <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
             <flux:breadcrumbs>
                 <flux:breadcrumbs.item href="/dashboard">{{ __('Home') }}</flux:breadcrumbs.item>
