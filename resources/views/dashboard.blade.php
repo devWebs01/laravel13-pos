@@ -12,8 +12,8 @@ $revenueToday = computed(function () {
     return Transaction::whereDate('created_at', today())->sum('total_amount');
 });
 
-$transactionsToday = computed(function () {
-    return Transaction::whereDate('created_at', today())->count();
+$totalStock = computed(function () {
+    return Product::where('is_unlimited_stock', false)->sum('stock');
 });
 
 $lowStockCount = computed(function () {
@@ -89,16 +89,16 @@ $topSellingProducts = computed(function () {
                     </p>
                 </div>
 
-                {{-- Transactions Today --}}
+                {{-- Total Stock --}}
                 <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
                     <div class="flex items-center gap-3">
                         <div class="flex size-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
-                            <flux:icon name="shopping-cart" variant="micro" />
+                            <flux:icon name="cube" variant="micro" />
                         </div>
-                        <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">{{ __("Today's Transactions") }}</p>
+                        <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">{{ __('Total Stock') }}</p>
                     </div>
                     <p class="mt-4 text-2xl font-bold tracking-tight">
-                        {{ Number::format($this->transactionsToday) }}
+                        {{ Number::format($this->totalStock) }}
                     </p>
                 </div>
 
@@ -123,6 +123,7 @@ $topSellingProducts = computed(function () {
                 </div>
             </div>
 
+            @can('categories.view')
             {{-- Sales Trend Chart --}}
             <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
                 <div class="mb-6 flex items-center justify-between">
@@ -131,6 +132,7 @@ $topSellingProducts = computed(function () {
 
                 <div wire:ignore id="salesTrendChart" class="h-[300px] w-full"></div>
             </div>
+            @endcan
 
             {{-- Bottom Grid --}}
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -197,6 +199,7 @@ $topSellingProducts = computed(function () {
             </div>
         </div>
 
+        @can('categories.view')
         @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
         <script>
@@ -276,5 +279,6 @@ $topSellingProducts = computed(function () {
             });
         </script>
         @endpush
+        @endcan
     @endvolt
 </x-layouts::app>

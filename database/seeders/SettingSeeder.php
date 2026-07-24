@@ -30,6 +30,7 @@ class SettingSeeder extends Seeder
             $contents = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => 10]]));
             if ($contents !== false) {
                 Storage::disk('public')->put('logo/logo-kopi.png', $contents);
+
                 return;
             }
         } catch (\Throwable $e) {

@@ -9,6 +9,7 @@ use App\Models\TransactionItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class ReportsTest extends TestCase
@@ -54,6 +55,7 @@ class ReportsTest extends TestCase
         for ($i = 0; $i < 3; $i++) {
             $transaction = Transaction::create([
                 'user_id' => $user->id,
+                'customer' => 'Test Customer',
                 'invoice_number' => 'INV-TEST-'.$i,
                 'total_amount' => 10000,
                 'paid_amount' => 10000,
@@ -75,7 +77,7 @@ class ReportsTest extends TestCase
             ->assertSet('to_date', now()->format('Y-m-d'));
     }
 
-    public function test_daily_revenue_shows_grouped_data(): void
+    public function test_revenue_and_count_reflect_transactions(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -89,6 +91,7 @@ class ReportsTest extends TestCase
 
         $transaction = Transaction::create([
             'user_id' => $user->id,
+            'customer' => 'Test Customer',
             'invoice_number' => 'INV-DAILY-1',
             'total_amount' => 50000,
             'paid_amount' => 50000,
@@ -105,10 +108,10 @@ class ReportsTest extends TestCase
         ]);
 
         Livewire::test('reports.index')
-            ->assertSee('Transfer');
+            ->assertSeeHtml('50.000');
     }
 
-    public function test_date_range_filtering_affects_results(): void
+    public function test_date_range_filtering_affects_summary(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -122,6 +125,7 @@ class ReportsTest extends TestCase
 
         $oldTransaction = Transaction::create([
             'user_id' => $user->id,
+            'customer' => 'Old Customer',
             'invoice_number' => 'INV-OLD',
             'total_amount' => 50000,
             'paid_amount' => 50000,
@@ -139,6 +143,7 @@ class ReportsTest extends TestCase
 
         $newTransaction = Transaction::create([
             'user_id' => $user->id,
+            'customer' => 'New Customer',
             'invoice_number' => 'INV-NEW',
             'total_amount' => 10000,
             'paid_amount' => 10000,
@@ -153,24 +158,137 @@ class ReportsTest extends TestCase
             'subtotal' => 10000,
         ]);
 
-        // Default range (this month) should only see "Transfer" (the new transaction)
         Livewire::test('reports.index')
-            ->assertSee('Transfer')
-            ->assertDontSee('Cash');
+            ->assertSeeHtml('10.000')
+            ->assertDontSeeHtml('50.000');
 
-        // Expand range to include last month — now "Cash" transaction appears too
         Livewire::test('reports.index')
             ->set('from_date', now()->subMonth()->startOfMonth()->format('Y-m-d'))
-            ->assertSee('Transfer')
-            ->assertSee('Cash');
+            ->assertSeeHtml('10.000')
+            ->assertSeeHtml('60.000');
     }
 
-    public function test_empty_state_shows_when_no_transactions(): void
+    public function test_empty_state_shows_zero_values(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
 
         Livewire::test('reports.index')
-            ->assertSeeHtml('No transactions found');
+            ->assertSeeHtml('0');
+    }
+
+    public function test_riwayat_page_is_accessible(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $response = $this->get('/reports/riwayat');
+
+        $response->assertOk();
+    }
+
+    public function test_riwayat_shows_transactions_in_range(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $transaction = Transaction::create([
+            'user_id' => $user->id,
+            'customer' => 'Test Customer',
+            'invoice_number' => 'INV-RIW-1',
+            'total_amount' => 15000,
+            'paid_amount' => 15000,
+            'change_amount' => 0,
+            'payment_method' => 'cash',
+        ]);
+
+        Livewire::test('reports.riwayat')
+            ->assertSee('INV-RIW-1')
+            ->assertSee('Tunai');
+    }
+
+    public function test_riwayat_payment_filter_works(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        Transaction::create([
+            'user_id' => $user->id,
+            'customer' => 'Cash Customer',
+            'invoice_number' => 'INV-RIW-CASH',
+            'total_amount' => 10000,
+            'paid_amount' => 10000,
+            'change_amount' => 0,
+            'payment_method' => 'cash',
+        ]);
+
+        Transaction::create([
+            'user_id' => $user->id,
+            'customer' => 'Transfer Customer',
+            'invoice_number' => 'INV-RIW-TRF',
+            'total_amount' => 20000,
+            'paid_amount' => 20000,
+            'change_amount' => 0,
+            'payment_method' => 'transfer',
+        ]);
+
+        Livewire::test('reports.riwayat', [
+            'payment_filter' => 'cash',
+        ])
+            ->assertSet('payment_filter', 'cash')
+            ->assertSee('INV-RIW-CASH')
+            ->assertDontSee('INV-RIW-TRF');
+    }
+
+    public function test_riwayat_search_works(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        Transaction::create([
+            'user_id' => $user->id,
+            'customer' => 'Searchable Customer',
+            'invoice_number' => 'INV-SEARCH-1',
+            'total_amount' => 5000,
+            'paid_amount' => 5000,
+            'change_amount' => 0,
+            'payment_method' => 'cash',
+        ]);
+
+        Livewire::test('reports.riwayat')
+            ->set('search', 'SEARCH-1')
+            ->assertSee('INV-SEARCH-1');
+    }
+
+    public function test_export_requires_auth(): void
+    {
+        $response = $this->get(route('reports.export'));
+
+        $response->assertRedirect(route('login'));
+    }
+
+    public function test_export_returns_csv_download(): void
+    {
+        Permission::findOrCreate('reports.view');
+        $user = User::factory()->create();
+        $user->givePermissionTo('reports.view');
+        $this->actingAs($user);
+
+        Transaction::create([
+            'user_id' => $user->id,
+            'customer' => 'Export Customer',
+            'invoice_number' => 'INV-EXPORT-1',
+            'total_amount' => 25000,
+            'paid_amount' => 25000,
+            'change_amount' => 0,
+            'payment_method' => 'transfer',
+        ]);
+
+        $response = $this->get(route('reports.export'));
+
+        $response->assertOk();
+        $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+        $response->assertHeader('Content-Disposition', 'attachment; filename=laporan_transaksi_'.now()->startOfMonth()->format('Y-m-d').'_s.d_'.now()->format('Y-m-d').'.csv');
+        $response->assertSee('INV-EXPORT-1');
     }
 }

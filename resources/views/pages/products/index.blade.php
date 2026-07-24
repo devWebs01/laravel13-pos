@@ -16,6 +16,7 @@ name('products.index');
 
 middleware('auth');
 middleware('verified');
+middleware('can:products.view');
 
 uses(WithPagination::class);
 

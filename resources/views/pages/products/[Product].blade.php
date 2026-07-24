@@ -18,6 +18,7 @@ uses(WithFileUploads::class);
 name('products.edit');
 middleware('auth');
 middleware('verified');
+middleware('can:products.edit');
 
 state([
     'product' => null,

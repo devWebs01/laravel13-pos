@@ -41,7 +41,10 @@ class Product extends Model
 
         if (! pathinfo($this->image, PATHINFO_EXTENSION)) {
             $url = app(CloudinaryService::class)->getUrl($this->image);
-            if ($url) return $url;
+            if ($url) {
+                return $url;
+            }
+
             return asset('images/product-default.svg');
         }
 

@@ -40,18 +40,14 @@ class RolePermissionSeeder extends Seeder
 
         $admin = Role::findOrCreate('admin');
         $admin->syncPermissions(
-            $permissions->filter(fn ($p) =>
-                ! str($p)->startsWith('roles.')
+            $permissions->filter(fn ($p) => ! str($p)->startsWith('roles.')
                 && ! str($p)->startsWith('permissions.')
             )
         );
 
         $kasir = Role::findOrCreate('kasir');
         $kasir->syncPermissions(
-            $permissions->filter(fn ($p) =>
-                str($p)->startsWith('products.')
-                || str($p)->startsWith('categories.')
-                || str($p)->startsWith('penjualan.')
+            $permissions->filter(fn ($p) => str($p)->startsWith('penjualan.')
                 || $p === 'reports.view'
             )
         );

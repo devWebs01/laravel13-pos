@@ -13,6 +13,7 @@ use function Livewire\Volt\{state, usesFileUploads};
 name('products.create');
 middleware('auth');
 middleware('verified');
+middleware('can:products.create');
 usesFileUploads();
 
 

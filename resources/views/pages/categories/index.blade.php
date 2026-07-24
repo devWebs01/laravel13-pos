@@ -14,6 +14,7 @@ name('categories.index');
 
 middleware('auth');
 middleware('verified');
+middleware('can:categories.view');
 
 uses(WithPagination::class);
 

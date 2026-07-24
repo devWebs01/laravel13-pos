@@ -29,6 +29,9 @@
                 <flux:sidebar.item icon="chart-bar-square" href="{{ route('reports.index') }}">
                     {{ __('Laporan') }}
                 </flux:sidebar.item>
+                <flux:sidebar.item icon="clipboard-document-list" href="/reports/riwayat">
+                    {{ __('Riwayat Transaksi') }}
+                </flux:sidebar.item>
                 @endcan
             </flux:sidebar.group>
 

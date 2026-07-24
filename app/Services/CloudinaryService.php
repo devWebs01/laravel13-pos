@@ -34,18 +34,22 @@ class CloudinaryService
         }
 
         try {
-            $options = ['folder' => $folder, 'transformation' => (new Transformation())->quality('auto')->format('auto')];
+            $options = ['folder' => $folder, 'transformation' => (new Transformation)->quality('auto')->format('auto')];
             $result = $this->client->uploadApi()->upload($filePath, $options);
+
             return ['public_id' => $result['public_id'], 'url' => $result['secure_url']];
         } catch (\Throwable $e) {
             Log::error('Cloudinary upload failed: '.$e->getMessage());
+
             return null;
         }
     }
 
     public function delete(string $publicId): void
     {
-        if (! $this->ready()) return;
+        if (! $this->ready()) {
+            return;
+        }
         try {
             $this->client->uploadApi()->destroy($publicId);
         } catch (\Throwable $e) {
@@ -55,18 +59,24 @@ class CloudinaryService
 
     public function getUrl(string $publicId): ?string
     {
-        if (! $this->ready()) return null;
+        if (! $this->ready()) {
+            return null;
+        }
         try {
             return $this->client->image($publicId)->toUrl();
         } catch (\Throwable $e) {
             Log::warning('Cloudinary URL generation failed: '.$e->getMessage());
+
             return null;
         }
     }
 
     public function isCloudinaryId(string $value): bool
     {
-        if (empty($value) || str_starts_with($value, 'http')) return false;
+        if (empty($value) || str_starts_with($value, 'http')) {
+            return false;
+        }
+
         return ! pathinfo($value, PATHINFO_EXTENSION);
     }
 }

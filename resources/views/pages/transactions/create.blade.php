@@ -59,10 +59,11 @@ $totalAmount = computed(function () {
 });
 
 $changeAmount = computed(function () {
-    $paid = (float) ($this->paid_amount ?: 0);
-    $total = (float) ($this->totalAmount ?: 0);
+    $paid = is_numeric($this->paid_amount)
+        ? (float) $this->paid_amount
+        : 0;
+    $total = collect($this->cart)->sum('subtotal');
 
-    // Langsung kembalikan hasil pengurangan
     return $paid - $total;
 });
 
@@ -128,6 +129,17 @@ $confirmSave = function () {
     $this->showConfirmModal = true;
 };
 
+$resetForm = function () {
+    $this->customer = '';
+    $this->category_id = 0;
+    $this->productSearch = '';
+    $this->cart = [];
+    $this->paid_amount = 0;
+    $this->payment_method = 'cash';
+    $this->notes = '';
+    $this->showConfirmModal = false;
+};
+
 $save = function () {
     $invoiceNumber = 'INV-' . now()->format('YmdHis') . '-' . strtoupper(Str::random(6));
 
@@ -184,9 +196,14 @@ $save = function () {
                 <flux:breadcrumbs.item>{{ __('New Transaction') }}</flux:breadcrumbs.item>
             </flux:breadcrumbs>
 
-            <div>
-                <flux:heading size="xl">{{ __('New Transaction') }}</flux:heading>
-                <flux:subheading>{{ __('Select products and process payment.') }}</flux:subheading>
+            <div class="flex items-center justify-between">
+                <div>
+                    <flux:heading size="xl">{{ __('New Transaction') }}</flux:heading>
+                    <flux:subheading>{{ __('Select products and process payment.') }}</flux:subheading>
+                </div>
+                <flux:button x-data x-on:click="if (!document.fullscreenElement) { document.documentElement.requestFullscreen() } else { document.exitFullscreen() }" icon="arrows-pointing-out" variant="ghost" size="sm">
+                    {{ __('Fullscreen') }}
+                </flux:button>
             </div>
 
             <form wire:submit="confirmSave">
@@ -215,8 +232,12 @@ $save = function () {
 
                             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                                 @forelse ($this->products as $product)
-                                    <div
-                                        class="group relative flex items-end justify-between rounded-lg border border-zinc-200 p-3 transition-all hover:scale-[1.02] hover:border-zinc-400 hover:shadow-sm active:scale-[0.98] dark:border-zinc-700 dark:hover:border-zinc-500"
+                                    <button type="button"
+                                        wire:click="addToCart({{ $product->id }})"
+                                        :disabled="!$product->is_unlimited_stock && $product->stock < 1"
+                                        wire:loading.attr="disabled"
+                                        wire:target="addToCart({{ $product->id }})"
+                                        class="group relative flex w-full items-end justify-between rounded-lg border border-zinc-200 p-3 text-left transition-all hover:scale-[1.02] hover:border-zinc-400 hover:shadow-sm active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:hover:border-zinc-500"
                                         style="background-image: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 60%, rgba(0,0,0,0.05) 100%), url('{{ $product->image_url }}'); background-size: cover; background-position: center; min-height: 100px;">
                                         <div class="min-w-0 flex-1 z-10">
                                             <p class="truncate text-sm font-medium text-white drop-shadow-sm">{{ $product->name }}</p>
@@ -236,10 +257,9 @@ $save = function () {
                                             @endif
                                             </div>
                                         </div>
-                                        <flux:button size="xs" variant="primary" icon="plus"
-                                            wire:click="addToCart({{ $product->id }})" :disabled="!$product->is_unlimited_stock && $product->stock < 1"
-                                            class="shrink-0 z-10" />
-                                    </div>
+                                        <flux:icon name="plus" wire:loading.remove wire:target="addToCart({{ $product->id }})" class="shrink-0 z-10 size-5 text-white" />
+                                        <flux:icon.loading wire:loading wire:target="addToCart({{ $product->id }})" class="shrink-0 z-10 size-5 text-white" />
+                                    </button>
                                 @empty
                                     <div
                                         class="col-span-full rounded-lg border border-dashed border-zinc-300 p-8 text-center text-sm text-zinc-500 dark:border-zinc-600">
@@ -281,17 +301,23 @@ $save = function () {
                                                     <div class="flex items-center gap-1">
                                                         <flux:button size="xs" variant="ghost" icon="minus"
                                                             wire:click="decrementQty({{ $index }})"
+                                                            wire:loading.attr="disabled"
+                                                            wire:target="decrementQty({{ $index }})"
                                                             class="shrink-0" />
                                                         <span
                                                             class="w-5 text-center text-sm font-medium">{{ $item['quantity'] }}</span>
                                                         <flux:button size="xs" variant="ghost" icon="plus"
                                                             wire:click="incrementQty({{ $index }})"
+                                                            wire:loading.attr="disabled"
+                                                            wire:target="incrementQty({{ $index }})"
                                                             class="shrink-0" />
                                                     </div>
                                                     <div class="min-w-[4.5rem] text-right text-sm font-medium">
                                                         {{ Number::currency($item['subtotal'], 'IDR', 'id') }}
                                                     </div>
                                                     <button type="button" wire:click="removeFromCart({{ $index }})"
+                                                        wire:loading.attr="disabled"
+                                                        wire:target="removeFromCart({{ $index }})"
                                                         class="shrink-0 rounded-full p-1 text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20">
                                                         <flux:icon name="x-mark" class="h-3.5 w-3.5" />
                                                     </button>
@@ -326,13 +352,21 @@ $save = function () {
                                         @endforeach
                                     </flux:select>
 
-                                    <flux:input wire:model.live="paid_amount" :label="__('Paid Amount')" type="number"
-                                        step="0.01" min="0" />
+                                    <div x-data="{
+                                        display: new Intl.NumberFormat('id-ID').format($wire.paid_amount || 0),
+                                        update(val) {
+                                            let raw = val.replace(/\./g, '').replace(/\D/g, '');
+                                            let amount = raw ? parseInt(raw, 10) : 0;
+                                            $wire.paid_amount = amount;
+                                            this.display = raw ? new Intl.NumberFormat('id-ID').format(amount) : '0';
+                                            $wire.$refresh();
+                                        }
+                                    }">
+                                        <flux:input x-model="display" x-on:input="update($el.value)" :label="__('Paid Amount')" type="text" inputmode="numeric" />
+                                    </div>
 
-                                    <div>
+                                    <div class="mt-4">
                                         <flux:label>{{ __('Change') }}</flux:label>
-
-                                        <!-- Menggunakan @class untuk kondisi warna -->
                                         <div @class([
                                             'mt-1 text-lg font-bold',
                                             'text-green-600 dark:text-green-400' => $this->changeAmount >= 0,
@@ -353,13 +387,16 @@ $save = function () {
 
                             {{-- Actions --}}
                             <div class="flex gap-2">
-                                <flux:button href="{{ route('transactions.index') }}" variant="filled"
-                                    class="flex-1 justify-center">
-                                    {{ __('Cancel') }}
+                                <flux:button wire:click="resetForm" variant="filled" class="flex-1 justify-center">
+                                    {{ __('Reset') }}
                                 </flux:button>
                                 <flux:button type="submit" variant="primary" :disabled="empty($this->cart)"
-                                    class="flex-1 justify-center">
-                                    {{ __('Review & Confirm') }}
+                                    class="flex-1 justify-center"
+                                    wire:loading.attr="disabled"
+                                    wire:target="confirmSave,save"
+                                    wire:loading.class="opacity-50">
+                                    <span wire:loading.remove wire:target="confirmSave,save">{{ __('Konfirmasi') }}</span>
+                                    <span wire:loading wire:target="confirmSave,save">{{ __('Menyimpan...') }}</span>
                                 </flux:button>
                             </div>
                         </div>
@@ -371,7 +408,7 @@ $save = function () {
             <flux:modal wire:model.self="showConfirmModal" class="max-w-2xl">
                 <form wire:submit="save" class="space-y-6">
                     <div>
-                        <flux:heading size="lg">{{ __('Confirm Transaction') }}</flux:heading>
+                        <flux:heading size="lg">{{ __('Save Transaction') }}</flux:heading>
                         <flux:subheading>{{ __('Please review the transaction details below before saving.') }}
                         </flux:subheading>
                     </div>
@@ -442,7 +479,13 @@ $save = function () {
                         <flux:modal.close>
                             <flux:button variant="filled">{{ __('Cancel') }}</flux:button>
                         </flux:modal.close>
-                        <flux:button variant="primary" type="submit">{{ __('Confirm & Save') }}</flux:button>
+                        <flux:button variant="primary" type="submit"
+                            wire:loading.attr="disabled"
+                            wire:target="save"
+                            wire:loading.class="opacity-50">
+                            <span wire:loading.remove wire:target="save">{{ __('Save') }}</span>
+                            <span wire:loading wire:target="save">{{ __('Saving...') }}</span>
+                        </flux:button>
                     </div>
                 </form>
             </flux:modal>
