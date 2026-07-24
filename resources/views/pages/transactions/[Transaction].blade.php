@@ -205,7 +205,7 @@ $paymentMethods = computed(function () {
                     <flux:subheading>{{ __('Update transaction #:invoice.', ['invoice' => $transaction->invoice_number]) }}
                     </flux:subheading>
                 </div>
-                <flux:button x-data x-on:click="if (!document.fullscreenElement) { document.documentElement.requestFullscreen() } else { document.exitFullscreen() }" icon="arrows-pointing-out" variant="ghost" size="sm">
+                <flux:button x-data x-on:click="if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); $dispatch('flux-toggle-sidebar') } else { document.exitFullscreen() }" icon="arrows-pointing-out" variant="ghost" size="sm">
                     {{ __('Fullscreen') }}
                 </flux:button>
             </div>

@@ -6,11 +6,11 @@
 </head>
 
 <body class="min-h-screen bg-white dark:bg-zinc-800">
-    <flux:sidebar sticky collapsible="mobile"
+    <flux:sidebar sticky collapsible
         class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
         <flux:sidebar.header>
             <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" />
-            <flux:sidebar.collapse class="lg:hidden" />
+            <flux:sidebar.collapse x-on:flux-toggle-sidebar.window="$el.click()" />
         </flux:sidebar.header>
 
         <flux:sidebar.nav>

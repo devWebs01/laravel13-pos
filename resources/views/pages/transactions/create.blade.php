@@ -201,7 +201,7 @@ $save = function () {
                     <flux:heading size="xl">{{ __('New Transaction') }}</flux:heading>
                     <flux:subheading>{{ __('Select products and process payment.') }}</flux:subheading>
                 </div>
-                <flux:button x-data x-on:click="if (!document.fullscreenElement) { document.documentElement.requestFullscreen() } else { document.exitFullscreen() }" icon="arrows-pointing-out" variant="ghost" size="sm">
+                <flux:button x-data x-on:click="if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); $dispatch('flux-toggle-sidebar') } else { document.exitFullscreen() }" icon="arrows-pointing-out" variant="ghost" size="sm">
                     {{ __('Fullscreen') }}
                 </flux:button>
             </div>
