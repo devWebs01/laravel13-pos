@@ -10,7 +10,7 @@
         class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
         <flux:sidebar.header>
             <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" />
-            <flux:sidebar.collapse x-on:flux-toggle-sidebar.window="$el.click()" />
+            <flux:sidebar.collapse />
         </flux:sidebar.header>
 
         <flux:sidebar.nav>
@@ -153,6 +153,8 @@
     </flux:header>
 
     {{ $slot }}
+
+    <div x-data x-init="document.addEventListener('fullscreenchange', () => document.querySelector('[data-flux-sidebar-collapse] button')?.click())" class="hidden"></div>
 
     @persist('toast')
     <flux:toast.group position="top end">
