@@ -10,6 +10,7 @@
                 "artisan",
                 "boost:mcp"
             ]
-        }
+        },
+        "lsp": true
     }
 }

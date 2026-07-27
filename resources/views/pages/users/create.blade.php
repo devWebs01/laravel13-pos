@@ -22,14 +22,29 @@ state([
     'selectedRoles' => [],
 ]);
 
-$roles = computed(fn() => Role::whereNotIn('name', ['kasir', 'superadmin'])->get());
+$roles = computed(fn() => auth()->user()->hasRole('superadmin')
+    ? Role::all()
+    : Role::whereIn('name', ['admin', 'kasir'])->get());
 
 $save = function () {
     $this->validate([
         'name' => ['required', 'string', 'max:255'],
         'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
         'password' => ['required', 'string', 'min:8', 'confirmed'],
+        'selectedRoles' => ['required', 'array'],
+        'selectedRoles.*' => ['string', 'exists:roles,name'],
     ]);
+
+    $allowedRoles = auth()->user()->hasRole('superadmin')
+        ? Role::all()->pluck('name')->toArray()
+        : ['admin', 'kasir'];
+
+    $invalid = array_diff($this->selectedRoles, $allowedRoles);
+    if (!empty($invalid)) {
+        throw new \Illuminate\Http\Exceptions\HttpResponseException(
+            redirect()->back()->withErrors(['selectedRoles' => 'Selected roles are not allowed.'])
+        );
+    }
 
     $user = User::create([
         'name' => $this->name,
