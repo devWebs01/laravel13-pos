@@ -24,6 +24,7 @@ state([
 
  $users = computed(function () {
  return User::query()
+ ->when(!auth()->user()->is_anonymized, fn($q) => $q->where('is_anonymized', false))
  ->where(function ($query) {
             $query->where('name', 'like', '%' . $this->search . '%')
                 ->orWhere('email', 'like', '%' . $this->search . '%');
@@ -87,12 +88,7 @@ $deleteUser = function ($id) {
                 <flux:table.rows>
                     @foreach ($this->users as $user)
                         <flux:table.row :key="$user->id">
-                            <flux:table.cell class="font-medium text-zinc-900 dark:text-zinc-100">
-                                @if ($user->is_anonymized && !auth()->user()->is_anonymized)
-                                    <span class="text-zinc-400 italic">{{ __('Hidden') }}</span>
-                                @else
-                                    {{ $user->name }}
-                                @endif
+                            <flux:table.cell class="font-medium text-zinc-900 dark:text-zinc-100">{{ $user->name }}
                             </flux:table.cell>
                             <flux:table.cell>{{ $user->email }}</flux:table.cell>
                             <flux:table.cell>
