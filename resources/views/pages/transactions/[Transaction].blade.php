@@ -199,13 +199,11 @@ $paymentMethods = computed(function () {
                 <flux:breadcrumbs.item>{{ $transaction->invoice_number }}</flux:breadcrumbs.item>
             </flux:breadcrumbs>
 
-            <div class="flex items-center justify-between">
-                <div>
-                    <flux:heading size="xl">{{ __('Edit Transaction') }}</flux:heading>
-                    <flux:subheading>{{ __('Update transaction #:invoice.', ['invoice' => $transaction->invoice_number]) }}
-                    </flux:subheading>
-                </div>
-                <flux:button x-data x-on:click="if (!document.fullscreenElement) { document.documentElement.requestFullscreen() } else { document.exitFullscreen() }" icon="arrows-pointing-out" variant="ghost" size="sm">
+            <div class="flex flex-col items-center text-center">
+                <flux:heading size="xl">{{ __('Edit Transaction') }}</flux:heading>
+                <flux:subheading>{{ __('Update transaction #:invoice.', ['invoice' => $transaction->invoice_number]) }}
+                </flux:subheading>
+                <flux:button class="mt-4" x-data x-on:click="if (!document.fullscreenElement) { document.documentElement.requestFullscreen() } else { document.exitFullscreen() }" icon="arrows-pointing-out" variant="ghost" size="sm">
                     {{ __('Fullscreen') }}
                 </flux:button>
             </div>

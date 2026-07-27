@@ -2,6 +2,8 @@
 
 use App\Models\Transaction;
 use Flux\Flux;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Number;
 use Illuminate\Support\Str;
 use Livewire\WithPagination;
 
@@ -20,6 +22,9 @@ uses(WithPagination::class);
 
 state([
     'search' => '',
+    'from_date' => now()->startOfMonth()->format('Y-m-d'),
+    'to_date' => now()->format('Y-m-d'),
+    'payment_filter' => '',
     'sortBy' => 'id',
     'sortDirection' => 'desc',
 ])->url();
@@ -40,14 +45,32 @@ $sort = function ($column) {
     }
 };
 
+$summary = computed(function () {
+    $query = Transaction::whereBetween('created_at', [$this->from_date . ' 00:00:00', $this->to_date . ' 23:59:59']);
+
+    if ($this->payment_filter !== '') {
+        $query->where('payment_method', $this->payment_filter);
+    }
+
+    return [
+        'total_transactions' => $query->count(),
+        'total_revenue' => (float) $query->sum('total_amount'),
+    ];
+});
+
 $transactions = computed(function () {
-    return Transaction::query()
+    $query = Transaction::query()
         ->withCount('items')
+        ->whereBetween('created_at', [$this->from_date . ' 00:00:00', $this->to_date . ' 23:59:59'])
         ->where(function ($q) {
             $q->where('invoice_number', 'like', '%' . $this->search . '%')->orWhere('customer', 'like', '%' . $this->search . '%');
-        })
-        ->orderBy($this->sortBy, $this->sortDirection)
-        ->paginate(10);
+        });
+
+    if ($this->payment_filter !== '') {
+        $query->where('payment_method', $this->payment_filter);
+    }
+
+    return $query->orderBy($this->sortBy, $this->sortDirection)->paginate(10);
 });
 
 $viewTransaction = computed(function () {
@@ -103,21 +126,64 @@ $delete = function () {
                 <flux:breadcrumbs.item>{{ __('Transactions') }}</flux:breadcrumbs.item>
             </flux:breadcrumbs>
 
-            <div class="flex items-center justify-between">
-                <div>
-                    <flux:heading size="xl">{{ __('Transactions') }}</flux:heading>
-                    <flux:subheading>{{ __('Manage sales transactions.') }}</flux:subheading>
-                </div>
-                <flux:button variant="primary" icon="plus" href="{{ route('transactions.create') }}" >
-                    {{ __('New Transaction') }}
-                </flux:button>
-            </div>
+<div class="flex items-center justify-between">
+    <div>
+        <flux:heading size="xl">{{ __('Transactions') }}</flux:heading>
+        <flux:subheading>{{ __('Manage sales transactions.') }}</flux:subheading>
+    </div>
+    <flux:button variant="primary" icon="plus" href="{{ route('transactions.create') }}" >
+        {{ __('New Transaction') }}
+    </flux:button>
+</div>
 
-            <flux:input size="md" wire:model.live="search" type="search"
-                placeholder="{{ __('Search by invoice or customer...') }}" />
+{{-- Filters --}}
+<div class="flex flex-wrap items-end gap-4 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
+    <div class="w-48">
+        <flux:input wire:model.live="from_date" type="date" :label="__('From')" />
+    </div>
+    <div class="w-48">
+        <flux:input wire:model.live="to_date" type="date" :label="__('To')" />
+    </div>
+    <div class="w-48">
+        <flux:select wire:model.live="payment_filter" :label="__('Payment')">
+            <flux:select.option value="">{{ __('All Methods') }}</flux:select.option>
+            @foreach ($methodLabels as $key => $label)
+                <flux:select.option value="{{ $key }}">{{ $label }}</flux:select.option>
+            @endforeach
+        </flux:select>
+    </div>
+    <div class="flex-1">
+        <flux:input size="md" wire:model.live="search" type="search"
+            placeholder="{{ __('Search by invoice or customer...') }}" />
+    </div>
+    <div class="flex gap-2">
+        <flux:button
+            href="/reports/cetak?from_date={{ $this->from_date }}&to_date={{ $this->to_date }}&payment={{ $this->payment_filter }}"
+            icon="printer" variant="primary" target="_blank">
+            {{ __('Print') }}
+        </flux:button>
+        <flux:button
+            href="{{ route('reports.export', ['from_date' => $this->from_date, 'to_date' => $this->to_date, 'payment' => $this->payment_filter]) }}"
+            icon="arrow-down-tray" variant="filled">
+            {{ __('Export Excel') }}
+        </flux:button>
+    </div>
+</div>
 
-            <div
-                class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
+{{-- Summary --}}
+<div class="grid gap-4 sm:grid-cols-2">
+    <div class="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
+        <p class="text-sm text-zinc-500">{{ __('Total Transactions') }}</p>
+        <p class="mt-1 text-2xl font-bold">{{ Number::format($this->summary['total_transactions']) }}</p>
+    </div>
+    <div class="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
+        <p class="text-sm text-zinc-500">{{ __('Total Revenue') }}</p>
+        <p class="mt-1 text-2xl font-bold">{{ Number::currency($this->summary['total_revenue'], 'IDR', 'id') }}</p>
+    </div>
+</div>
+
+<div
+    class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
 
                 <flux:table :paginate="$this->transactions">
                     <flux:table.columns>

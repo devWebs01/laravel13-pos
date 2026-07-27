@@ -54,13 +54,11 @@ $recentTransactions = computed(function () {
     return Transaction::latest()->limit(5)->get();
 });
 
-$topSellingProducts = computed(function () {
-    return TransactionItem::selectRaw('product_id, SUM(quantity) as total_qty')
-        ->groupBy('product_id')
-        ->orderByDesc('total_qty')
-        ->limit(5)
-        ->with('product')
-        ->get();
+$productStockList = computed(function () {
+    return Product::where('is_unlimited_stock', false)
+        ->orderBy('stock')
+        ->limit(10)
+        ->get(['id', 'name', 'stock', 'sku']);
 });
 
 ?>
@@ -168,34 +166,37 @@ $topSellingProducts = computed(function () {
                     </div>
                 </div>
 
-                {{-- Top Selling Products --}}
-                <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
-                    <div class="mb-4 flex items-center justify-between">
-                        <flux:heading size="lg">{{ __('Produk Terlaris') }}</flux:heading>
-                    </div>
+{{-- Product Stock List --}}
+<div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
+    <div class="mb-4 flex items-center justify-between">
+        <flux:heading size="lg">{{ __('Jumlah Stok Produk') }}</flux:heading>
+        <flux:link href="{{ route('products.index') }}" class="text-xs font-semibold">
+            {{ __('View All') }}
+        </flux:link>
+    </div>
 
-                    <div class="space-y-4">
-                        @forelse($this->topSellingProducts as $item)
-                            <div class="flex items-center justify-between rounded-lg border border-zinc-50 p-3 dark:border-zinc-700/50">
-                                <div class="flex items-center gap-3">
-                                    <div class="flex size-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400">
-                                        {{ $loop->iteration }}
-                                    </div>
-                                    <div>
-                                        <p class="text-sm font-medium">{{ $item->product?->name ?? __('Unknown') }}</p>
-                                        <p class="text-xs text-zinc-500">{{ $item->product?->category?->name ?? '-' }}</p>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-sm font-bold">{{ $item->total_qty }}</p>
-                                    <p class="text-xs text-zinc-500">{{ __('items') }}</p>
-                                </div>
-                            </div>
-                        @empty
-                            <p class="py-4 text-center text-sm text-zinc-500">{{ __('No data available.') }}</p>
-                        @endforelse
+    <div class="space-y-4">
+        @forelse($this->productStockList as $product)
+            <div class="flex items-center justify-between rounded-lg border border-zinc-50 p-3 dark:border-zinc-700/50">
+                <div class="flex items-center gap-3">
+                    <div class="flex size-8 items-center justify-center rounded-lg {{ $product->stock <= 0 ? 'bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400' : 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' }}">
+                        <flux:icon name="cube" variant="micro" />
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium">{{ $product->name }}</p>
+                        <p class="text-xs text-zinc-500">{{ $product->sku ?: '-' }}</p>
                     </div>
                 </div>
+                <div class="text-right">
+                    <p class="text-sm font-bold {{ $product->stock <= 0 ? 'text-rose-600' : '' }}">{{ Number::format($product->stock) }}</p>
+                    <p class="text-xs text-zinc-500">{{ __('pcs') }}</p>
+                </div>
+            </div>
+        @empty
+            <p class="py-4 text-center text-sm text-zinc-500">{{ __('No data available.') }}</p>
+        @endforelse
+    </div>
+</div>
             </div>
         </div>
 

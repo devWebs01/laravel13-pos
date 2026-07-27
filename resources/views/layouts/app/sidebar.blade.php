@@ -9,6 +9,14 @@
             opacity: 1 !important;
             position: static !important;
         }
+        [data-flux-sidebar] [data-flux-sidebar-brand] div.truncate {
+            white-space: normal !important;
+            overflow-wrap: break-word !important;
+            word-break: break-word !important;
+            text-overflow: clip !important;
+            overflow: visible !important;
+            max-width: 100% !important;
+        }
     </style>
 </head>
 
@@ -32,27 +40,12 @@
                 </flux:sidebar.item>
                 @endcan
 
-                @can('reports.view')
-                <flux:sidebar.group
-                    :heading="__('Laporan')"
-                    icon="chart-bar-square"
-                    expandable
-                    :expanded="request()->routeIs('reports.index') || request()->routeIs('reports.riwayat') || request()->is('reports/riwayat')"
-                >
-                    <flux:sidebar.item
-                        icon="chart-bar-square"
-                        href="{{ route('reports.index') }}"
-                        :current="request()->routeIs('reports.index')">
-                        {{ __('Analitik') }}
-                    </flux:sidebar.item>
-                    <flux:sidebar.item
-                        icon="clock"
-                        href="/reports/riwayat"
-                        :current="request()->routeIs('reports.riwayat')">
-                        {{ __('Riwayat Transaksi') }}
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
-                @endcan
+@can('reports.view')
+<flux:sidebar.item icon="chart-bar-square" href="{{ route('reports.index') }}"
+    :current="request()->routeIs('reports.index')">
+    {{ __('Laporan') }}
+</flux:sidebar.item>
+@endcan
             </flux:sidebar.group>
 
             @can('products.view')
