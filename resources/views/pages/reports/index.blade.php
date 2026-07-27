@@ -122,7 +122,10 @@ $categoryData = computed(function () {
             </flux:breadcrumbs>
 
             <div class="flex items-center justify-between">
-                <flux:heading size="lg">{{ __('Reports') }}</flux:heading>
+                <div>
+                    <flux:heading size="xl">{{ __('Reports') }}</flux:heading>
+                    <flux:subheading>{{ __('View sales analytics and reports.') }}</flux:subheading>
+                </div>
             </div>
 
             {{-- Date Range Filter --}}

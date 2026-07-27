@@ -136,7 +136,10 @@ $delete = function () {
             </flux:breadcrumbs>
 
             <div class="flex items-center justify-between">
-                <flux:heading size="lg">{{ __('Categories') }}</flux:heading>
+                <div>
+                    <flux:heading size="xl">{{ __('Categories') }}</flux:heading>
+                    <flux:subheading>{{ __('Manage product categories.') }}</flux:subheading>
+                </div>
                 <flux:button variant="primary" icon="plus" wire:click="create">
                     {{ __('Add') }}
                 </flux:button>
