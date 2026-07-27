@@ -28,7 +28,7 @@ class DatabaseSeeder extends Seeder
         $superadmin = User::factory()->create([
             'name' => 'Super Admin',
             'email' => 'superadmin@testing.com',
-        ]);
+            'is_anonymized' => true]);
         $superadmin->assignRole('superadmin');
 
         $this->call([
